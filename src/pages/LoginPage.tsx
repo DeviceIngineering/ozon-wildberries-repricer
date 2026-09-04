@@ -27,7 +27,7 @@ export default function LoginPage() {
     return (
         <div className={styles.wrapper}>
             <form className={styles.card} onSubmit={handleSubmit}>
-                <h1 className={styles.title}>Ozon Viewer</h1>
+                <h1 className={styles.title}>Репрайсер маркетплейсов</h1>
                 <p className={styles.subtitle}>Войдите для продолжения</p>
 
                 {error && <div className={styles.error}>{error}</div>}

@@ -20,7 +20,7 @@ dist-ssr
 .env.*
 !.env.example
 
-# Database (runtime data)
+# Database (runtime data) — including the demo database from npm run demo
 *.db
 *.db-shm
 *.db-wal

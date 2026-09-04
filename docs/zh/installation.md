@@ -23,10 +23,38 @@
 
 ---
 
+
+## 先看效果 —— 无需接入店铺
+
+在配置真实凭据之前，你可以先用合成数据看到整个应用的运行效果：
+
+```bash
+npm run demo
+```
+
+该命令会向 `demo.db` 写入三家店铺（Ozon、Wildberries、Yandex Market）、42 个商品和
+60 天的销售数据，然后启动应用。这份目录刻意覆盖了最值得看的场景：价格低于下限的商品、
+低于成本的促销、缺少成本价的商品、价格隔离，以及一个正在运行的价格实验。
+
+演示数据不会访问任何平台：其中的凭据都是占位符，并且这些店铺的调价器处于关闭状态。
+可以用上面创建的管理员登录，也可以针对演示数据库单独创建一个：
+
+```bash
+DB_PATH=./demo.db ADMIN_PASSWORD='至少12位' npm run seed
+```
+
+随时可以重建或删除演示数据：
+
+```bash
+DB_PATH=./demo.db npm run seed:demo -- --reset
+```
+
+如果数据库中已经存在真实店铺，演示数据脚本会拒绝运行。
+
 ## 2. 安装依赖
 
 ```bash
-git clone <你的仓库地址> && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
 npm ci
 ```
 

@@ -1,12 +1,12 @@
 {
-  "name": "ozon-viewer",
+  "name": "marketplace-repricer",
   "version": "3.0.0",
   "description": "Multi-marketplace repricer for Ozon, Wildberries and Yandex Market: unit-economics price floors, promo auto-exit, Bayesian price experiments and an HTTP control plane for LLM agents.",
   "license": "MIT",
-  "author": "",
+  "author": "DeviceIngineering",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/DeviceIngineering/marketplace-repricer.git"
   },
   "engines": {
     "node": ">=20"
@@ -33,7 +33,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "node seed-admin.mjs",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit"
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "seed:demo": "node scripts/seedDemo.cjs",
+    "demo": "DB_PATH=./demo.db node scripts/seedDemo.cjs && DB_PATH=./demo.db npm run dev:all"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1034.0",
@@ -70,5 +72,9 @@
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
     "vitest": "^4.1.0"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/DeviceIngineering/marketplace-repricer/issues"
+  },
+  "homepage": "https://github.com/DeviceIngineering/marketplace-repricer#readme"
 }

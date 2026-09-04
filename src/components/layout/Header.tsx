@@ -42,7 +42,7 @@ export default function Header() {
     <>
       <header className={styles.header}>
         <NavLink to="/dashboard" className={styles.logo}>
-          Ozon Viewer
+          Репрайсер
         </NavLink>
 
         <div className={styles.controls}>

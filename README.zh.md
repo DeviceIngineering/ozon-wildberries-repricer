@@ -86,9 +86,35 @@ Wildberries 没有「退出活动」的接口，因此退出是通过 Prices API
 
 ---
 
-## 截图
+## 界面预览
 
-> 发布前请在此处放上驾驶舱、商品表和策略页的截图。一个管钱的工具，别人是以「它看上去是否值得托付金钱」来评判的。
+**决策驾驶舱** —— 不是指标看板。每张卡片都是一个带着金额的问题，以及一个能解决它的按钮。
+
+![决策驾驶舱](docs/images/cockpit.png)
+
+**商品表** —— 基准价及其偏离、成本、计算出的保本价下限、毛利率、促销标记、库存。调价器据以决策的一切，都在同一行里。
+
+![商品表](docs/images/products.png)
+
+**一个主价格，覆盖三个平台。** 同一个货号同时在 Ozon、Wildberries 和 Yandex Market 上架；你只设定一次买家应看到的价格，系统再把它展开成各平台自己的规则。低于成本的价格在下发之前就会被标红。
+
+![主价格](docs/images/master-prices.png)
+
+**价格实验及其推理过程。** 日志会显示引擎做了什么、为什么这么做：区间扫描、ladder 步进、等待证据积累。在你把某个商品切到「自动」之前，什么都不会真正生效。
+
+![定价策略](docs/images/strategies.png)
+
+深浅两套主题均支持：
+
+![浅色主题](docs/images/cockpit-light.png)
+
+### 无需接入店铺即可试用
+
+```bash
+npm run demo
+```
+
+它会把一份合成的商品目录 —— 三家店铺、42 个商品、60 天销售数据，其中特意包含低于下限的商品、低于成本的促销、缺少成本价的商品，以及一个正在运行的实验 —— 写入 `demo.db` 并启动应用。全程不涉及任何凭据，也不会访问任何平台。上面的截图正是它生成的样子。
 
 ---
 
@@ -107,7 +133,7 @@ SQLite 单文件 + WAL · 多阶段 Dockerfile · Sentry（可选）
 **环境要求：** Node 20+，以及编译原生模块所需的工具链（`python3`、`make`、`g++`）——`better-sqlite3` 在安装时需要编译。
 
 ```bash
-git clone <你的仓库地址> && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
 npm ci
 
 cp .env.example .env

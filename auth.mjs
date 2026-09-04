@@ -22,6 +22,13 @@ if (!process.env.BETTER_AUTH_SECRET) {
 const TRUSTED_ORIGINS = (process.env.TRUSTED_ORIGINS || BASE_URL)
     .split(",").map(o => o.trim()).filter(Boolean);
 
+// Same reason as the CORS list in server.cjs: the Vite dev server is a
+// different origin from the API. Development only.
+if (process.env.NODE_ENV !== "production") {
+    const VITE_PORT = process.env.VITE_PORT || 5173;
+    TRUSTED_ORIGINS.push(`http://localhost:${VITE_PORT}`, `http://127.0.0.1:${VITE_PORT}`);
+}
+
 export const auth = betterAuth({
     baseURL: BASE_URL,
     database: db,

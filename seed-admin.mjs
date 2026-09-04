@@ -1,5 +1,11 @@
-import { auth } from "./auth.mjs";
-import Database from "better-sqlite3";
+import { createRequire } from "module";
+
+// Must run before auth.mjs is imported: it reads DB_PATH and
+// BETTER_AUTH_SECRET at module load time.
+createRequire(import.meta.url)("./lib/loadEnv.cjs").loadEnv();
+
+const { auth } = await import("./auth.mjs");
+const { default: Database } = await import("better-sqlite3");
 
 const DB_PATH = process.env.DB_PATH || "./ozon.db";
 const EMAIL = process.env.ADMIN_EMAIL || "admin@example.com";

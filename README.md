@@ -86,9 +86,35 @@ See [docs/en/api-external.md](docs/en/api-external.md) and [docs/en/llm-agent.md
 
 ---
 
-## Screenshots
+## What it looks like
 
-> Add screenshots of the cockpit, the product table and the strategies page here before publishing. A tool that manages money is judged on whether it looks like it can be trusted with money.
+**The decision cockpit** — not a metrics dashboard. Every card is a problem with money attached and a button that resolves it.
+
+![Decision cockpit](docs/images/cockpit.png)
+
+**The product table** — reference price and its deviation, cost, computed floor, margin, promo flags, stock. Everything the repricer decides on, in one row.
+
+![Product table](docs/images/products.png)
+
+**One master price across three marketplaces.** The same article number is listed on Ozon, Wildberries and Yandex Market; you set the price a buyer should see once, and it is expanded into each platform's own rules. Prices below cost are flagged before anything is sent.
+
+![Master prices](docs/images/master-prices.png)
+
+**A price experiment, with its reasoning.** The log shows what the engine did and why — corridor scan, ladder step, hold while evidence accumulates. Nothing is applied until you switch a product to Auto.
+
+![Pricing strategies](docs/images/strategies.png)
+
+Both themes are supported:
+
+![Light theme](docs/images/cockpit-light.png)
+
+### Try it without a marketplace account
+
+```bash
+npm run demo
+```
+
+Seeds a synthetic catalogue — three stores, 42 products, 60 days of sales, deliberately including items below floor, promotions under cost, missing cost prices and one running experiment — into `demo.db` and starts the app. No credentials are involved and nothing contacts a marketplace. The screenshots above are exactly what this produces.
 
 ---
 
@@ -107,7 +133,7 @@ Roughly 35 000 lines. 155 tests over the pricing maths, the strategy engine, the
 **Requirements:** Node 20+, and a toolchain for native modules (`python3`, `make`, `g++`) because `better-sqlite3` compiles on install.
 
 ```bash
-git clone <your-fork-url> && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
 npm ci
 
 cp .env.example .env

@@ -23,10 +23,41 @@ From `git clone` to your first working store. Every step was checked against the
 
 ---
 
+
+## Try it first, without a marketplace account
+
+Before wiring up real credentials, you can see the whole application working on
+synthetic data:
+
+```bash
+npm run demo
+```
+
+This seeds `demo.db` with three stores (Ozon, Wildberries, Yandex Market),
+42 products and 60 days of sales, then starts the app. The catalogue is built to
+show the parts that matter: items priced below their floor, promotions under
+cost, products with no cost price, quarantine, and one running price experiment.
+
+Nothing in the demo contacts a marketplace — the credentials are placeholders
+and the repricer is switched off for those stores. Log in with the administrator
+you created above, or create one against the demo database:
+
+```bash
+DB_PATH=./demo.db ADMIN_PASSWORD='at-least-12-chars' npm run seed
+```
+
+Rebuild or remove the demo data at any time:
+
+```bash
+DB_PATH=./demo.db npm run seed:demo -- --reset
+```
+
+The demo refuses to run against a database that already holds real stores.
+
 ## 2. Install dependencies
 
 ```bash
-git clone <your-fork-url> && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
 npm ci
 ```
 

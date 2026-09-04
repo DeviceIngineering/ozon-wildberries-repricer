@@ -1,3 +1,7 @@
+// Load .env before anything reads process.env. Docker passes real
+// environment variables, which always take precedence.
+require('./lib/loadEnv.cjs').loadEnv();
+
 // Opt-in DNS override for hosts whose resolver cannot reach marketplace APIs
 // (notably Docker's internal DNS proxy at 127.0.0.11, which resolves some
 // Ozon/Yandex domains inconsistently). Off by default: this reroutes every
@@ -38,6 +42,16 @@ const ALLOWED_ORIGINS = (process.env.TRUSTED_ORIGINS
     || process.env.BETTER_AUTH_URL
     || `http://localhost:${PORT}`)
     .split(',').map(o => o.trim()).filter(Boolean);
+
+// In development the UI is served by Vite on its own port and calls the API
+// cross-origin, so the app's own URL is not enough. Never added in production.
+if (process.env.NODE_ENV !== 'production') {
+    const VITE_PORT = process.env.VITE_PORT || 5173;
+    for (const host of ['localhost', '127.0.0.1']) {
+        const origin = `http://${host}:${VITE_PORT}`;
+        if (!ALLOWED_ORIGINS.includes(origin)) ALLOWED_ORIGINS.push(origin);
+    }
+}
 
 app.use(cors({
     origin(origin, cb) {
