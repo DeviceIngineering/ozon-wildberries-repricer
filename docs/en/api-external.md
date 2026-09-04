@@ -67,19 +67,50 @@ State summary.
 ```
 
 #### `GET /stores`
+By default only the fields a decision needs are returned: `id, name, platform, repricer_enabled, strategy_kill_switch, tax_rate, min_margin_percent, last_updated_at`, plus the credential flags. `?full=1` gives the extended view (still without secrets).
 List of stores **without secrets**. Secret fields are replaced with the flags `has_ozon_creds`/`has_wb_creds`/`has_ym_creds`.
 
 #### `GET /stores/:id`
 Store details (repricer settings, thresholds, kill switch).
 
 #### `GET /stores/:id/products`
-The store's products. Query: `page`, `pageSize` (≤500), `sort` (`key:asc|desc`), `search`, `filter` (`all|on_sale|below_ref|no_cost|promo|errors|has_fbo|...`).
+The store's products. Query: `page`, `pageSize` (≤500), `sort` (`key:asc|desc`), `search`, `filter` (`all|on_sale|below_ref|no_cost|promo|errors|has_fbo|...`), **`fields`**, **`format`**.
+
+The response includes `management_mode`, `managed_by` and `strategy_type` — the ownership mode is visible right away, with no extra call to `/context` just to read `sku_states`.
+
 ```json
 { "data": [{ "offer_id": "SKU-0001", "name": "...", "price": "1035",
              "ref_price": 1035, "cost_price": 414, "min_price": "500",
-             "stocks_fbo": 0, "strategy_type": "ref_price", "sales_30d": 12 }],
+             "stocks_fbo": 0, "strategy_type": "ref_price", "sales_30d": 12,
+             "management_mode": "ref_price" }],
   "meta": { "total": 1025, "page": 1, "pageSize": 50 } }
 ```
+
+##### Context economy
+
+The full card is 31 fields — roughly **258 tokens per product**. A 1,000-SKU catalog in that shape runs to ~258,000 tokens and simply does not fit into a model's context. Two parameters solve it:
+
+`fields=a,b,c` — return only the listed fields; `null` values are not returned at all.
+`fields=default` — the set needed for a pricing decision: `offer_id, price, marketing_price, min_price, ref_price, cost_price, floor_min_price, sales_30d, stocks_fbo, in_promo, promo_price, management_mode`.
+
+`format=compact` — the column names are lifted out of the rows:
+
+```json
+{ "data": { "cols": ["offer_id", "price", "ref_price", "cost_price", "floor_min_price"],
+            "rows": [["SKU-0001", "1035", 1035, 414, 619],
+                     ["SKU-0002", "740", 740, 240, 500]] },
+  "meta": { "total": 1025, "page": 1, "pageSize": 500, "format": "compact" } }
+```
+
+Measured on live data (500 products in the response):
+
+| Request | Size | |
+|---|---:|---:|
+| no parameters | 10,196 B | — |
+| `fields=default` | 2,767 B | −73% |
+| `fields=default&format=compact` | **1,175 B** | **−88%** |
+
+The default format has not changed — existing agents keep working.
 
 #### `GET /stores/:id/sales?window=30`
 Daily sales. Without `offer_id` — the top sellers over the window; with `offer_id` — the daily series for that SKU. `window` ≤ 90.
@@ -87,8 +118,20 @@ Daily sales. Without `offer_id` — the top sellers over the window; with `offer
 #### `GET /stores/:id/repricer-logs`
 Log of repricer runs. Query: `action`, `period`, `page`, `limit` (≤500).
 
+`store_id` and `run_id` are gone from the rows: the first is already in the URL, and the second is a UUID costing about 27 tokens per row. The response's list of runs now lives in `meta.runs`.
+
 #### `GET /stores/:id/pending`
-Status of price pushes (post-verification). Query: `status` (`PENDING|VERIFIED_OK|VERIFIED_FAIL|EXPIRED`).
+Status of price pushes (post-verification). Query: `status` (`PENDING|VERIFIED_OK|VERIFIED_FAIL|EXPIRED`), `limit` (100 by default, ≤500), `since` (ISO date), **`summary=1`**.
+
+The table accumulates history, so any selection has a ceiling. After a mass push, take the summary instead of every row:
+
+```json
+{ "data": { "by_status": { "VERIFIED_OK": 78, "PENDING": 2, "VERIFIED_FAIL": 20 },
+            "failures": [{ "offer_id": "SKU-0007", "sent_price": 1200,
+                           "actual_price": 1350, "fail_reason": "..." }] } }
+```
+
+Checking after a push of 1,000 SKUs: ~120,000 tokens for the full list against ~400 for the summary.
 
 #### `GET /products/:offerId/cross-store`
 The product's prices across every store.

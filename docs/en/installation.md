@@ -379,7 +379,7 @@ If you still see many `429`s:
 ### Other
 
 - **`503 not_configured` on `/api/ext/v1/*`** — `EXTERNAL_API_KEY` is unset. `503 disabled` — the runtime flag `external_api_enabled` is off.
-- **`409 context_stale` on a price write** — the context changed; re-read `GET /context` (the fresh context is included in the error body) and retry. This is normal behaviour, see [External API](api-external.md).
+- **`409 context_stale` on a price write** — the context changed. The error body already carries `current_version` and `changed` (exactly what changed); a full `GET /context` is only needed when that is not enough. This is normal behaviour, see [External API](api-external.md).
 - **"The repricer does nothing"** — read the run summary in the logs: the `REPRICER_SUMMARY` line breaks every item down by outcome (`ok`, `corrected`, `skipped_promo`, `skipped_quarantine`, `skipped_below_cost`, `skipped_no_price`, `fetch_errors`), and each item lands in exactly one bucket.
 - **Ozon returned 200 but the price did not change** — look in `api_logs` for an entry containing `items rejected by Ozon`: per-item rejections arrive inside a successful response and are parsed out separately.
 

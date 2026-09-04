@@ -67,19 +67,50 @@ Authorization: Bearer <EXTERNAL_API_KEY>
 ```
 
 #### `GET /stores`
+По умолчанию отдаются только поля, нужные для решения: `id, name, platform, repricer_enabled, strategy_kill_switch, tax_rate, min_margin_percent, last_updated_at` плюс признаки наличия ключей. `?full=1` — расширенный вид (по-прежнему без секретов).
 Список магазинов **без секретов**. Секретные поля заменены флагами `has_ozon_creds`/`has_wb_creds`/`has_ym_creds`.
 
 #### `GET /stores/:id`
 Детали магазина (настройки репрайсера, пороги, kill-switch).
 
 #### `GET /stores/:id/products`
-Товары магазина. Query: `page`, `pageSize` (≤500), `sort` (`key:asc|desc`), `search`, `filter` (`all|on_sale|below_ref|no_cost|promo|errors|has_fbo|...`).
+Товары магазина. Query: `page`, `pageSize` (≤500), `sort` (`key:asc|desc`), `search`, `filter` (`all|on_sale|below_ref|no_cost|promo|errors|has_fbo|...`), **`fields`**, **`format`**.
+
+Ответ включает `management_mode`, `managed_by`, `strategy_type` — режим владения виден сразу, отдельный запрос к `/context` ради `sku_states` не нужен.
+
 ```json
 { "data": [{ "offer_id": "SKU-0001", "name": "...", "price": "1035",
              "ref_price": 1035, "cost_price": 414, "min_price": "500",
-             "stocks_fbo": 0, "strategy_type": "ref_price", "sales_30d": 12 }],
+             "stocks_fbo": 0, "strategy_type": "ref_price", "sales_30d": 12,
+             "management_mode": "ref_price" }],
   "meta": { "total": 1025, "page": 1, "pageSize": 50 } }
 ```
+
+##### Экономия контекста
+
+Полная карточка — 31 поле, около **258 токенов на товар**. Каталог в 1 000 SKU в таком виде занимает ~258 000 токенов и в контекст модели просто не помещается. Два параметра решают это:
+
+`fields=a,b,c` — вернуть только перечисленные поля; `null` не отдаются вовсе.
+`fields=default` — набор для ценового решения: `offer_id, price, marketing_price, min_price, ref_price, cost_price, floor_min_price, sales_30d, stocks_fbo, in_promo, promo_price, management_mode`.
+
+`format=compact` — имена колонок выносятся из строк:
+
+```json
+{ "data": { "cols": ["offer_id", "price", "ref_price", "cost_price", "floor_min_price"],
+            "rows": [["SKU-0001", "1035", 1035, 414, 619],
+                     ["SKU-0002", "740", 740, 240, 500]] },
+  "meta": { "total": 1025, "page": 1, "pageSize": 500, "format": "compact" } }
+```
+
+Замер на живых данных (500 товаров в ответе):
+
+| Запрос | Размер | |
+|---|---:|---:|
+| без параметров | 10 196 Б | — |
+| `fields=default` | 2 767 Б | −73% |
+| `fields=default&format=compact` | **1 175 Б** | **−88%** |
+
+Формат по умолчанию не изменился — существующие агенты продолжают работать.
 
 #### `GET /stores/:id/sales?window=30`
 Дневные продажи. Без `offer_id` — топ-продавцы за окно; с `offer_id` — дневной ряд по SKU. `window` ≤ 90.
@@ -87,8 +118,20 @@ Authorization: Bearer <EXTERNAL_API_KEY>
 #### `GET /stores/:id/repricer-logs`
 Лог прогонов репрайсера. Query: `action`, `period`, `page`, `limit` (≤500).
 
+`store_id` и `run_id` из строк убраны: первый есть в URL, второй — UUID ценой около 27 токенов на строку. Список прогонов ответа — в `meta.runs`.
+
 #### `GET /stores/:id/pending`
-Статус отправок цен (пост-верификация). Query: `status` (`PENDING|VERIFIED_OK|VERIFIED_FAIL|EXPIRED`).
+Статус отправок цен (пост-верификация). Query: `status` (`PENDING|VERIFIED_OK|VERIFIED_FAIL|EXPIRED`), `limit` (по умолчанию 100, ≤500), `since` (ISO-дата), **`summary=1`**.
+
+Таблица накапливается исторически, поэтому у выборки есть предел. После массовой отправки берите сводку, а не все строки:
+
+```json
+{ "data": { "by_status": { "VERIFIED_OK": 78, "PENDING": 2, "VERIFIED_FAIL": 20 },
+            "failures": [{ "offer_id": "SKU-0007", "sent_price": 1200,
+                           "actual_price": 1350, "fail_reason": "..." }] } }
+```
+
+Проверка после отправки 1 000 SKU: ~120 000 токенов полным списком против ~400 сводкой.
 
 #### `GET /products/:offerId/cross-store`
 Цены изделия по всем магазинам.

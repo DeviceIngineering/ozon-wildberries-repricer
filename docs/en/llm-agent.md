@@ -33,7 +33,7 @@ SEVERAL agents plus the human user work on this project. So that nobody breaks a
    the SKU states (`sku_states`), and the active decisions (`active_decisions`). Read all of it.
 2. **Every `POST /stores/:id/prices` must include** `agent` (your permanent name,
    e.g. `"pricing-agent-gpt"`) and the `context_version` from step 1.
-   - Stale version (someone made a new decision) → `409 context_stale` plus fresh context.
+   - Stale version (someone made a new decision) → `409 context_stale`, carrying the current version and the list of changes in `changed`.
      Re-read it and decide again. This is not an error — it is protection against working blind.
    - No version → `428 context_version_required`.
 3. **SKU ownership is strictly per store.** The products are the same across stores, but the mode is
@@ -115,13 +115,46 @@ Useful product `filter` values: `on_sale`, `below_ref` (price below the referenc
 ## Working cycle (follow the steps)
 
 1. **Look around:** `GET /health` → which stores are active.
-2. **Gather data:** per store — `GET /stores/:id/products` (current prices, cost price, stock) + `GET /stores/:id/sales?window=30` (demand).
+2. **Gather data — narrowly.** Do not pull the whole catalog: start with the problem items and ask only for the fields you need.
+   ```
+   GET /stores/:id/products?filter=below_ref&fields=default&format=compact&pageSize=500
+   ```
+   Useful filters: `below_ref` (price below the reference price), `no_cost` (no cost price — the price floor cannot be computed), `promo` (in a promotion), `errors`, `on_sale`.
+   Demand over the last 30 days is already in the `sales_30d` field; a separate `GET /sales` is only needed for revenue and for the length of the series.
 3. **Compute** prices on your side (accounting for cost price, margin, demand, stock).
 4. **Verify the computation:** `POST /stores/:id/prices` with `"dry_run": true`. Study the `preview`.
 5. **Run through the safety checklist** (below).
 6. **Apply:** the same request with `"dry_run": false`.
-7. **Confirm it landed:** after ~3 minutes, `GET /stores/:id/pending?status=VERIFIED_OK` (and `VERIFIED_FAIL` — what did not go through).
+7. **Confirm it landed:** after ~3 minutes, `GET /stores/:id/pending?summary=1` — counts per status and the list of failures. Ask for the full set of rows only when you need to dig into specific items.
 8. **Log** your decisions and their reasons on your side.
+
+---
+
+## 💰 Context economy
+
+Everything this API returns lands in your context and costs tokens. A full 1,000-SKU catalog with no parameters is about 258,000 tokens — it does not fit in the window. These rules cut the bill several times over:
+
+**Ask for fields, not the whole card.** `fields=default` returns exactly what a pricing decision needs. `format=compact` lifts the column names out of the rows: `{cols:[...], rows:[[...]]}`. Together they cut 88% of the payload.
+
+**Work through a filter, not the whole catalog.** `filter=below_ref` or `filter=no_cost` rather than `filter=all`. Usually it is dozens of items that need attention, not thousands.
+
+**Use `If-None-Match`.** The server returns an `ETag` on every GET. Keep it and send it back on the next request:
+
+```
+GET /context
+→ 200, ETag: W/"1dc9-abc123"
+
+GET /context   with the header   If-None-Match: W/"1dc9-abc123"
+→ 304 Not Modified, empty body — reuse what you already read
+```
+
+This matters most for `/briefing` and `/context`: without it you re-read them in full every turn. Note that some HTTP clients (`fetch` on undici in particular) swallow the `304` and hand you a `200` with a body — you need a client that does not.
+
+**Do not read `/briefing` and `/context` back to back.** They partly overlap: decisions arrive first as markdown, then as JSON. The briefing is for grasping the situation at the start of a session; the context is for getting `context_version` and the machine-readable state.
+
+**On `409 context_stale`, do not re-read the context automatically.** The error already carries `current_version` and `changed` — what changed. A full `GET /context` is only needed when that is not enough.
+
+**Prose on demand.** `GET /pnl` does not return the methodology text by default (`?verbose=1` if you want it). `GET /stores` returns only the working fields (`?full=1` for the extended view).
 
 ---
 

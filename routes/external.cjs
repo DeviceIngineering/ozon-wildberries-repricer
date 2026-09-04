@@ -6,6 +6,7 @@ const yandexFetcher = require('../yandexFetcher.cjs');
 const wbFetcher = require('../wbFetcher.cjs');
 const { computeOldPrice } = require('../lib/priceHelpers.cjs');
 const wrap = require('../middleware/asyncHandler.cjs');
+const proj = require('../lib/apiProjection.cjs');
 
 function getFetcher(platform) {
     if (platform === 'yandex') return yandexFetcher;
@@ -14,13 +15,26 @@ function getFetcher(platform) {
 }
 
 // Магазин без секретов (токены маркетплейсов наружу не отдаём).
-function sanitizeStore(s) {
+// Раньше работало по принципу «вырезать секреты», из-за чего наружу уходили
+// все 26 колонок магазина, включая операторские настройки, которые агенту не
+// нужны. Теперь белый список: что не перечислено — не отдаётся.
+// ?full=1 возвращает прежний расширенный вид (без секретов).
+function sanitizeStore(s, { full = false } = {}) {
     if (!s) return s;
     const {
         api_key, client_id, wb_api_key, ym_api_key, ym_business_id, ym_campaign_id,
         ...safe
     } = s;
-    return { ...safe, has_ozon_creds: !!(api_key && client_id), has_wb_creds: !!wb_api_key, has_ym_creds: !!ym_api_key };
+    const creds = {
+        has_ozon_creds: !!(api_key && client_id),
+        has_wb_creds: !!wb_api_key,
+        has_ym_creds: !!ym_api_key,
+    };
+    if (full) return { ...safe, ...creds };
+
+    const out = {};
+    for (const f of proj.STORE_AGENT_FIELDS) if (safe[f] !== undefined) out[f] = safe[f];
+    return { ...out, ...creds };
 }
 
 // Проставить данные для аудита (пишутся middleware на finish).
@@ -165,6 +179,7 @@ router.get('/stores/:id/pnl', wrap(async (req, res) => {
     const store = await db.getStoreById(req.params.id);
     if (!store) return res.status(404).json({ error: 'Store not found', code: 'not_found' });
     const days = Math.min(90, parseInt(req.query.days, 10) || 40);
+    const verbose = req.query.verbose === '1' || req.query.verbose === 'true';
     const { db: raw } = require('../db/connection.cjs');
     const agg = raw.prepare(`SELECT sum(units) units, sum(revenue) revenue,
         sum(CASE WHEN cost_unit IS NOT NULL THEN cost_unit*units ELSE 0 END) cogs
@@ -185,11 +200,18 @@ router.get('/stores/:id/pnl', wrap(async (req, res) => {
             cogs: Math.round(agg.cogs || 0),
             gross_before_fees: Math.round(revenue - (agg.cogs || 0)),
             tax_estimate: Math.round(tax),
-            methodology: [
-                `Выручка — начисления из sales_daily (${isOzon ? 'включая соинвест Ozon ~' + Math.round(policies.coinvest_share_ozon * 100) + '%' : 'цена продавца'}).`,
-                'Соинвест НЕ облагается налогом и НЕ означает, что цены занижены — НЕ поднимать цены на его основании.',
-                'gross_before_fees НЕ включает комиссию/логистику/рекламу/хранение маркетплейса — реальная чистая прибыль ниже. Полный P&L по финансовым API — у пользователя.',
-            ],
+            // Методика — константа, но раньше приезжала при каждом вызове и
+            // занимала 59% ответа. Теперь только по ?verbose=1; без него —
+            // короткий маркер, по которому агент поймёт, что правила те же.
+            ...(verbose
+                ? {
+                    methodology: [
+                        `Выручка — начисления из sales_daily (${isOzon ? 'включая соинвест Ozon ~' + Math.round(policies.coinvest_share_ozon * 100) + '%' : 'цена продавца'}).`,
+                        'Соинвест НЕ облагается налогом и НЕ означает, что цены занижены — НЕ поднимать цены на его основании.',
+                        'gross_before_fees НЕ включает комиссию/логистику/рекламу/хранение маркетплейса — реальная чистая прибыль ниже. Полный P&L по финансовым API — у пользователя.',
+                    ],
+                }
+                : { methodology_ref: 'pnl/v1 — полный текст: ?verbose=1' }),
         },
     });
 }));
@@ -216,27 +238,42 @@ router.get('/health', wrap(async (req, res) => {
 // GET /stores — список магазинов (без секретов)
 router.get('/stores', wrap(async (req, res) => {
     const stores = await db.getAllStores();
-    res.json({ data: stores.map(sanitizeStore) });
+    const full = req.query.full === '1' || req.query.full === 'true';
+    res.json({ data: stores.map((s) => sanitizeStore(s, { full })) });
 }));
 
 // GET /stores/:id — детали магазина
 router.get('/stores/:id', wrap(async (req, res) => {
     const s = await db.getStoreById(req.params.id);
     if (!s) return res.status(404).json({ error: 'Store not found', code: 'not_found' });
-    res.json({ data: sanitizeStore(s) });
+    res.json({ data: sanitizeStore(s, { full: req.query.full === '1' || req.query.full === 'true' }) });
 }));
 
 // GET /stores/:id/products — товары (пагинация/фильтры/поиск)
+// ?fields=a,b,c либо ?fields=default — только нужные поля (null отбрасываются).
+// ?format=compact — {cols:[...], rows:[[...]]} вместо массива объектов.
+// Полный формат остаётся по умолчанию: существующие агенты не ломаются.
 router.get('/stores/:id/products', wrap(async (req, res) => {
     const s = await db.getStoreById(req.params.id);
     if (!s) return res.status(404).json({ error: 'Store not found', code: 'not_found' });
-    const { page, pageSize, sort, search, filter } = req.query;
+    const { page, pageSize, sort, search, filter, format } = req.query;
     const result = await db.getStoreProductsPaginated(req.params.id, {
         page: parseInt(page, 10) || 1,
         pageSize: Math.min(500, parseInt(pageSize, 10) || 50),
         sort, search, filter,
     });
-    res.json({ data: result.items, meta: { total: result.total, page: result.page, pageSize: result.pageSize } });
+
+    const allowed = result.items.length ? Object.keys(result.items[0]) : proj.PRODUCT_PRICING_FIELDS;
+    const fields = proj.parseFields(req.query.fields, allowed, proj.PRODUCT_PRICING_FIELDS);
+    const { payload } = proj.shape(result.items, { fields, format });
+
+    res.json({
+        data: payload,
+        meta: {
+            total: result.total, page: result.page, pageSize: result.pageSize,
+            ...(format === 'compact' ? { format: 'compact' } : {}),
+        },
+    });
 }));
 
 // GET /stores/:id/sales?window=30 — дневные продажи (для оценки спроса)
@@ -253,6 +290,8 @@ router.get('/stores/:id/sales', wrap(async (req, res) => {
 }));
 
 // GET /stores/:id/repricer-logs — лог репрайсера
+// store_id повторяется в каждой строке, хотя стоит в URL, а run_id — UUID
+// ценой в 27 токенов на строку. Оба вынесены: список прогонов идёт в meta.
 router.get('/stores/:id/repricer-logs', wrap(async (req, res) => {
     const result = await db.getRepricerLogs(req.params.id, {
         action: req.query.action || null,
@@ -260,13 +299,33 @@ router.get('/stores/:id/repricer-logs', wrap(async (req, res) => {
         page: parseInt(req.query.page, 10) || 1,
         limit: Math.min(500, parseInt(req.query.limit, 10) || 100),
     });
-    res.json(result);
+    const rows = result.items || result.data || [];
+    const runs = [...new Set(rows.map(r => r.run_id).filter(Boolean))];
+    res.json({
+        ...result,
+        [result.items ? 'items' : 'data']: proj.omit(rows, ['store_id', 'run_id']),
+        meta: { ...(result.meta || {}), store_id: req.params.id, runs },
+    });
 }));
 
 // GET /stores/:id/pending — статус отправок цен
+// ?summary=1 — счётчики по статусам и список упавших вместо всех строк.
+// ?limit= (по умолчанию 100, максимум 500), ?since=ISO-дата.
+// store_id и product_id из строк убраны: первый есть в URL, второй агенту не нужен.
 router.get('/stores/:id/pending', wrap(async (req, res) => {
-    const rows = await db.getPendingUpdates(req.params.id, req.query.status);
-    res.json({ data: rows });
+    const since = req.query.since || null;
+
+    if (req.query.summary === '1' || req.query.summary === 'true') {
+        const summary = await db.getPendingSummary(req.params.id, { since });
+        return res.json({ data: summary, meta: { store_id: req.params.id, since } });
+    }
+
+    const limit = Math.min(500, parseInt(req.query.limit, 10) || 100);
+    const rows = await db.getPendingUpdates(req.params.id, req.query.status, { limit, since });
+    res.json({
+        data: proj.omit(rows, ['store_id', 'product_id']),
+        meta: { store_id: req.params.id, count: rows.length, limit, truncated: rows.length === limit },
+    });
 }));
 
 // GET /products/:offerId/cross-store — цены изделия по всем магазинам
@@ -291,7 +350,10 @@ router.post('/stores/:id/prices', wrap(async (req, res) => {
     // Слои 1/2/4: версия контекста, владение SKU, рельсы
     const v = db.validatePriceUpdates(store, updates, { agent, contextVersion: context_version, confirmMass: confirm_mass });
     if (!v.ok) {
-        return res.status(v.error.status).json({ error: v.error.message, code: v.error.code, context: v.error.context });
+        // Раскрываем всё, что положил governance: для context_stale это
+        // current_version / your_version / changed, для остальных — ничего лишнего.
+        const { status, message, code, ...rest } = v.error;
+        return res.status(status).json({ error: message, code, ...rest });
     }
     if (v.accepted.length === 0) {
         audit(req, { store_id: store.id, action: 'prices.rejected', summary: `${agent}: все ${updates.length} отклонены governance`, affected_count: 0 });

@@ -33,7 +33,7 @@
    SKU 状态（`sku_states`）以及生效中的决策（`active_decisions`）。全部读完。
 2. **每次 `POST /stores/:id/prices` 都必须携带** `agent`（你的固定名字，
    例如 `"pricing-agent-gpt"`）以及第 1 步取得的 `context_version`。
-   - 版本已过期（有人做出了新决策）→ `409 context_stale` + 返回最新上下文。
+   - 版本已过期（有人做出了新决策）→ `409 context_stale`，其中带有当前版本号以及 `changed` 中的变更清单。
      重新读一遍上下文，重新做决策。这不是错误 —— 这是防止你盲目操作的保护机制。
    - 未携带版本 → `428 context_version_required`。
 3. **SKU 归属严格按店铺划分。** 各店铺的商品是同一件东西，但模式绑定在
@@ -115,13 +115,46 @@
 ## 工作流程（按步骤执行）
 
 1. **先看全局：** `GET /health` → 哪些店铺是活跃的。
-2. **采集数据：** 对目标店铺执行 `GET /stores/:id/products`（当前价格、成本价、库存）+ `GET /stores/:id/sales?window=30`（需求）。
+2. **采集数据 —— 做窄查询。** 不要把整个目录拉下来：从有问题的条目入手，并且只请求需要的字段。
+   ```
+   GET /stores/:id/products?filter=below_ref&fields=default&format=compact&pageSize=500
+   ```
+   常用过滤器：`below_ref`（价格低于基准价）、`no_cost`（无成本价 —— 保本价下限算不出来）、`promo`（参加促销中）、`errors`、`on_sale`。
+   最近 30 天的需求已经在 `sales_30d` 字段里了；只有需要销售额和更长的日序列时才单独调 `GET /sales`。
 3. **在你这一侧计算**价格（综合考虑成本价、毛利率、需求、库存）。
 4. **校验计算结果：** `POST /stores/:id/prices` 带 `"dry_run": true`。仔细看 `preview`。
 5. **对照安全检查清单**（见下文）。
 6. **正式应用：** 同一个请求改为 `"dry_run": false`。
-7. **确认已生效：** 约 3 分钟后 `GET /stores/:id/pending?status=VERIFIED_OK`（以及 `VERIFIED_FAIL` —— 看哪些没成功）。
+7. **确认已生效：** 约 3 分钟后 `GET /stores/:id/pending?summary=1` —— 得到各状态的计数和失败列表。只有需要排查具体条目时，才去拉完整的行列表。
 8. **在你这一侧记录**你的决策及其理由。
+
+---
+
+## 💰 节省上下文
+
+这个 API 返回的一切都会进入你的上下文，都是要花 token 的。1 000 个 SKU 的完整目录不带任何参数约 258 000 token，根本放不进窗口。下面这些规则能把开销压下去好几倍：
+
+**只要字段，别要整张卡片。** `fields=default` 给出的正是做价格决策所需的内容。`format=compact` 把列名从每一行中提出来：`{cols:[...], rows:[[...]]}`。两者配合，体积减少 88%。
+
+**按过滤器工作，而不是整个目录。** 用 `filter=below_ref` 或 `filter=no_cost`，而不是 `filter=all`。通常需要关注的是几十个条目，而不是几千个。
+
+**用好 `If-None-Match`。** 服务端在所有 GET 上都会返回 `ETag`。把它存下来，在下一次请求时带上：
+
+```
+GET /context
+→ 200, ETag: W/"1dc9-abc123"
+
+GET /context   带请求头   If-None-Match: W/"1dc9-abc123"
+→ 304 Not Modified，响应体为空 —— 直接复用你已经读到的内容
+```
+
+这对 `/briefing` 和 `/context` 尤其重要：不这么做，你每一轮都要把它们整个重读一遍。注意：某些 HTTP 客户端（特别是基于 undici 的 `fetch`）会把 `304` 藏起来，改为返回带响应体的 `200` —— 需要换一个不做这种处理的客户端。
+
+**不要接连读 `/briefing` 和 `/context`。** 两者内容有部分重叠：决策先以 markdown 出现一次，再以 JSON 出现一次。简报用于在会话开始时了解全局，上下文用于拿到 `context_version` 和机器可读的状态。
+
+**遇到 `409 context_stale` 时不要自动重读上下文。** 错误响应里已经带上了 `current_version` 和 `changed` —— 也就是变更增量。只有在这些信息不够用时，才去做一次完整的 `GET /context`。
+
+**长篇文字按需索取。** `GET /pnl` 默认不返回方法说明正文（需要时加 `?verbose=1`）。`GET /stores` 只返回工作所需的字段（`?full=1` 为扩展视图）。
 
 ---
 

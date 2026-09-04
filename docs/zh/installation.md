@@ -376,7 +376,7 @@ WB 对整个卖家账号施加严格限额。客户端内已实现**进程级**�
 ### 其他
 
 - **`/api/ext/v1/*` 返回 `503 not_configured`** —— 未设置 `EXTERNAL_API_KEY`。返回 `503 disabled` 则表示运行时开关 `external_api_enabled` 已关闭。
-- **写价格时返回 `409 context_stale`** —— 上下文已变更；重新读取 `GET /context`（最新上下文就在错误响应体中）后重试。这是正常行为，参见[外部 API](api-external.md)。
+- **写价格时返回 `409 context_stale`** —— 上下文已变更。错误响应体中已经带有 `current_version` 和 `changed`（具体变了什么）；只有在这些信息不够用时，才需要做一次完整的 `GET /context`。这是正常行为，参见[外部 API](api-external.md)。
 - **「调价器什么都没做」** —— 请查看日志中的运行汇总：`REPRICER_SUMMARY` 一行按原因给出全部分类（`ok`、`corrected`、`skipped_promo`、`skipped_quarantine`、`skipped_below_cost`、`skipped_no_price`、`fetch_errors`），每个商品都恰好落入其中一类。
 - **Ozon 返回 200 但价格没变** —— 在 `api_logs` 中查找包含 `items rejected by Ozon` 的记录：单条商品的拒绝信息藏在成功响应内部，由代码单独解析。
 

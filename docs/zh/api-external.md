@@ -67,19 +67,50 @@ Base URL：`https://<host>/api/ext/v1`
 ```
 
 #### `GET /stores`
+默认只返回做决策所需的字段：`id, name, platform, repricer_enabled, strategy_kill_switch, tax_rate, min_margin_percent, last_updated_at`，外加表示密钥是否存在的标志位。`?full=1` —— 扩展视图（同样不含任何密钥）。
 店铺列表，**不含密钥**。敏感字段被替换为 `has_ozon_creds`/`has_wb_creds`/`has_ym_creds` 标志位。
 
 #### `GET /stores/:id`
 店铺详情（调价器设置、阈值、kill-switch）。
 
 #### `GET /stores/:id/products`
-店铺商品。Query：`page`、`pageSize`（≤500）、`sort`（`key:asc|desc`）、`search`、`filter`（`all|on_sale|below_ref|no_cost|promo|errors|has_fbo|...`）。
+店铺商品。Query：`page`、`pageSize`（≤500）、`sort`（`key:asc|desc`）、`search`、`filter`（`all|on_sale|below_ref|no_cost|promo|errors|has_fbo|...`）、**`fields`**、**`format`**。
+
+响应中包含 `management_mode`、`managed_by`、`strategy_type`、`in_experiment` —— 托管归属一眼可见，不必再为了拿 `sku_states` 而单独请求一次 `/context`。
+
 ```json
 { "data": [{ "offer_id": "SKU-0001", "name": "...", "price": "1035",
              "ref_price": 1035, "cost_price": 414, "min_price": "500",
-             "stocks_fbo": 0, "strategy_type": "ref_price", "sales_30d": 12 }],
+             "stocks_fbo": 0, "strategy_type": "ref_price", "sales_30d": 12,
+             "management_mode": "ref_price" }],
   "meta": { "total": 1025, "page": 1, "pageSize": 50 } }
 ```
+
+##### 节省上下文
+
+一张完整商品卡片有 31 个字段，约合**每件商品 258 个 token**。1 000 个 SKU 的目录按这种形式就是约 258 000 token，根本塞不进模型的上下文窗口。两个参数解决这个问题：
+
+`fields=a,b,c` —— 只返回列出的字段；值为 `null` 的字段完全不返回。
+`fields=default` —— 定价决策所需的字段集：`offer_id, price, marketing_price, min_price, ref_price, cost_price, floor_min_price, sales_30d, stocks_fbo, in_promo, promo_price, management_mode`。
+
+`format=compact` —— 把列名从每一行中提出来：
+
+```json
+{ "data": { "cols": ["offer_id", "price", "ref_price", "cost_price", "floor_min_price"],
+            "rows": [["SKU-0001", "1035", 1035, 414, 619],
+                     ["SKU-0002", "740", 740, 240, 500]] },
+  "meta": { "total": 1025, "page": 1, "pageSize": 500, "format": "compact" } }
+```
+
+真实数据实测（响应中含 500 件商品）：
+
+| 请求 | 大小 | |
+|---|---:|---:|
+| 不带参数 | 10 196 字节 | —— |
+| `fields=default` | 2 767 字节 | −73% |
+| `fields=default&format=compact` | **1 175 字节** | **−88%** |
+
+默认格式保持不变 —— 已有的 Agent 无需改动即可继续工作。
 
 #### `GET /stores/:id/sales?window=30`
 按天的销售数据。不传 `offer_id` —— 返回窗口内的畅销榜；传 `offer_id` —— 返回该 SKU 的日序列。`window` ≤ 90。
@@ -87,8 +118,20 @@ Base URL：`https://<host>/api/ext/v1`
 #### `GET /stores/:id/repricer-logs`
 调价器运行批次日志。Query：`action`、`period`、`page`、`limit`（≤500）。
 
+行中已移除 `store_id` 和 `run_id`：前者在 URL 中已经有了，后者是 UUID，每行要多花约 27 个 token。运行批次列表改放在响应的 `meta.runs` 中。
+
 #### `GET /stores/:id/pending`
-价格推送状态（推送后校验）。Query：`status`（`PENDING|VERIFIED_OK|VERIFIED_FAIL|EXPIRED`）。
+价格推送状态（推送后校验）。Query：`status`（`PENDING|VERIFIED_OK|VERIFIED_FAIL|EXPIRED`）、`limit`（默认 100，≤500）、`since`（ISO 日期）、**`summary=1`**。
+
+这张表是历史累积的，所以查询有上限。批量推送之后请取汇总，而不是拉全部行：
+
+```json
+{ "data": { "by_status": { "VERIFIED_OK": 78, "PENDING": 2, "VERIFIED_FAIL": 20 },
+            "failures": [{ "offer_id": "SKU-0007", "sent_price": 1200,
+                           "actual_price": 1350, "fail_reason": "..." }] } }
+```
+
+推送 1 000 个 SKU 后的校验：完整列表约 120 000 token，改用汇总约 400 token。
 
 #### `GET /products/:offerId/cross-store`
 该商品在所有店铺中的价格。

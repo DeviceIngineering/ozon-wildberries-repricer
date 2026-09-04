@@ -191,6 +191,13 @@ async function getStoreProductsPaginated(storeId, { page = 1, pageSize = 20, sor
         d.stocks_fbo = r.stocks_fbo;
         d.stocks_fbs = r.stocks_fbs;
         d.stocks_updated_at = r.stocks_updated_at;
+        // Ownership and strategy: needed to decide whether a price may be
+        // touched at all. getStoreProducts already returned these; without them
+        // here a caller had to read /context separately and join by hand.
+        d.management_mode = r.management_mode;
+        d.managed_by = r.managed_by;
+        d.strategy_type = r.strategy_type;
+        d.in_experiment = r.in_experiment;
         return d;
     });
 

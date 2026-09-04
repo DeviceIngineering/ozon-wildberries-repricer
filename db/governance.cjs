@@ -119,7 +119,21 @@ function validatePriceUpdates(store, updates, { agent, contextVersion, confirmMa
         return { ok: false, error: { status: 428, code: 'context_version_required', message: 'Передайте context_version из GET /context — записи без версии контекста запрещены.' }, accepted: [], rejected: [] };
     }
     if (parseInt(contextVersion, 10) !== current) {
-        return { ok: false, error: { status: 409, code: 'context_stale', message: `Контекст устарел (ваша версия ${contextVersion}, текущая ${current}). Перечитайте GET /context и примите решение заново.`, context: getContext() }, accepted: [], rejected: [] };
+        // Раньше здесь возвращался весь контекст целиком. На каталоге с сотнями
+        // управляемых SKU это десятки тысяч токенов на каждую коллизию версий,
+        // притом что изменилось, как правило, одно решение. Отдаём то, что
+        // изменилось; полный контекст агент возьмёт из GET /context, если нужен.
+        return {
+            ok: false,
+            error: {
+                status: 409, code: 'context_stale',
+                message: `Контекст устарел (ваша версия ${contextVersion}, текущая ${current}). Изменения — в changed; при необходимости перечитайте GET /context.`,
+                current_version: current,
+                your_version: parseInt(contextVersion, 10) || null,
+                changed: getContextChanges(),
+            },
+            accepted: [], rejected: [],
+        };
     }
     if (!agent) {
         return { ok: false, error: { status: 400, code: 'agent_required', message: 'Укажите agent — имя агента (пишется в аудит и владение).' }, accepted: [], rejected: [] };
@@ -168,6 +182,27 @@ function validatePriceUpdates(store, updates, { agent, contextVersion, confirmMa
         accepted.push(u);
     }
     return { ok: true, accepted, rejected };
+}
+
+/**
+ * Что изменилось, если контекст агента устарел: активные решения и SKU,
+ * тронутые недавно. Заведомо дешевле полного контекста и в подавляющем
+ * большинстве случаев отвечает на вопрос «что я пропустил».
+ */
+function getContextChanges(limit = 20) {
+    const decisions = db.prepare(
+        `SELECT id, author, kind, title, store_id, created_at
+         FROM agent_decisions
+         WHERE status = 'active'
+         ORDER BY id DESC LIMIT ?`).all(limit);
+
+    const skus = db.prepare(
+        `SELECT p.offer_id, p.management_mode, p.managed_by, s.name AS store, s.platform
+         FROM products p JOIN stores s ON s.id = p.store_id
+         WHERE p.management_mode IS NOT NULL AND p.management_mode != 'ref_price'
+         ORDER BY p.updated_at DESC LIMIT ?`).all(limit);
+
+    return { active_decisions: decisions, managed_sku: skus };
 }
 
 // ── Брифинг («ознакомься») и подтверждения ────────────────────────
@@ -227,6 +262,7 @@ function getBriefing() {
 }
 
 module.exports = {
+    getContextChanges,
     getContextVersion, bumpContextVersion, getPolicies, getContext,
     addDecision, listDecisions, closeDecision,
     setManagementMode, getManagedSkus, validatePriceUpdates,

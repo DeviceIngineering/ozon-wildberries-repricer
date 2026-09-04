@@ -7,6 +7,22 @@ versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Context-saving parameters on the external API.** Everything this API returns
+  is read by a language model and paid for in tokens; a 1 000-SKU catalogue in
+  the old shape was ~258 000 tokens and did not fit in a context window at all.
+  - `GET /products` accepts `fields=` (a list, or `default` for the pricing set)
+    and `format=compact` (`{cols, rows}` instead of repeating every key in every
+    object). Measured on live data, 500 products: 10 196 → 1 175 bytes, −88%.
+  - `GET /pending` accepts `limit` (100 by default, 500 max), `since` and
+    `summary=1`, which returns counts per status and the failures instead of
+    every row. It was the only endpoint with no limit at all.
+  - `GET /stores` returns the fields an agent needs; `?full=1` restores the wide
+    view. `GET /pnl` puts its methodology text behind `?verbose=1`.
+  - `GET /products` now also returns `management_mode`, `managed_by`,
+    `strategy_type` and `in_experiment`, so ownership no longer requires a
+    second call to `/context`.
+  - `ETag` / `If-None-Match` documented — the server already answered `304`, but
+    nothing said so, so agents re-read the briefing and context every turn.
 - **Demo mode.** `npm run demo` seeds a synthetic catalogue — three stores, 42
   products, 60 days of sales, including items below floor, promotions under
   cost, missing cost prices and a running experiment — and starts the app, so
@@ -33,6 +49,13 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Confirmation dialogs on the kill switch and on bulk promotion exit.
 
 ### Changed
+- **`409 context_stale` no longer returns the entire context.** It answers with
+  `current_version`, `your_version` and `changed` — the decisions and managed
+  SKUs that moved. The old behaviour cost tens of thousands of tokens per
+  collision on a large catalogue, to report that one decision had changed.
+- `store_id` and `run_id` are no longer repeated in every row of
+  `/repricer-logs` and `/pending`. The first is already in the URL and the
+  second is a UUID, which costs about 27 tokens — as much as a sentence.
 - **Breaking.** `dry_run` now defaults to `true` on external API price writes.
   Clients that relied on the previous default must pass `dry_run: false`
   explicitly.

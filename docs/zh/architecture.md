@@ -311,10 +311,10 @@ HTTP 中，客户端读取资源得到 `ETag`，写入时带上 `If-Match: <etag
 |---|---|
 | `GET /resource` → `ETag: "42"` | `GET /context` → `context_version: 42` |
 | `PUT` + `If-Match: "42"` | `POST /stores/:id/prices` + `context_version: 42` |
-| `412 Precondition Failed` | `409 context_stale` —— **同一响应中直接附带最新上下文** |
+| `412 Precondition Failed` | `409 context_stale` —— **同一响应中直接附带变更增量** |
 | 不带 `If-Match` 的写入被允许 | 不带版本号的写入被拒绝：`428 context_version_required` |
 
-与经典 ETag 有两处刻意的差异。其一，`409` 直接返回上下文，智能体无需第二次往返即可重新决策。其二，缺少版本号是**错误**，而不是「可以写」：一个被遗忘的字段绝不应该改动真实价格。
+与经典 ETag 有两处刻意的差异。其一，`409` 返回的不只是当前版本号，还包括变更增量，因此智能体通常无需第二次往返就能知道自己错过了什么。过去这个响应会直接携带完整上下文，但在有数百个受管 SKU 的商品目录上，每次版本冲突都要为此付出数万 token。其二，缺少版本号是**错误**，而不是「可以写」：一个被遗忘的字段绝不应该改动真实价格。
 
 版本号是 `app_settings.context_version` 中的计数器，任何共享知识发生变化时由 `bumpContextVersion()` 递增：新增决策、关闭决策、变更 SKU 管理模式。
 

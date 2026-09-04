@@ -311,10 +311,10 @@ This is the same scheme, except the version covers **the entire field of knowled
 |---|---|
 | `GET /resource` → `ETag: "42"` | `GET /context` → `context_version: 42` |
 | `PUT` + `If-Match: "42"` | `POST /stores/:id/prices` + `context_version: 42` |
-| `412 Precondition Failed` | `409 context_stale` — **with the fresh context in the same response** |
+| `412 Precondition Failed` | `409 context_stale` — **with the delta of changes in the same response** |
 | a write without `If-Match` is allowed | a write without a version is rejected: `428 context_version_required` |
 
-Two departures from the classic ETag are deliberate. First, `409` returns the context immediately, so an agent does not need a second round-trip to re-read state. Second, a missing version is an **error**, not permission to write: a forgotten field must never move real prices.
+Two departures from the classic ETag are deliberate. First, `409` returns not just the current version number but the delta of what changed, so an agent usually needs no second round-trip to learn what it missed. The full context used to travel in that same response, which on a catalogue with hundreds of managed SKUs cost tens of thousands of tokens per collision. Second, a missing version is an **error**, not permission to write: a forgotten field must never move real prices.
 
 The version is a counter in `app_settings.context_version`, incremented by `bumpContextVersion()` whenever shared knowledge changes — a new journal entry, a closed decision, a change of SKU management mode.
 
