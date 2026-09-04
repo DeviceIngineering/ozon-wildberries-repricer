@@ -1,0 +1,145 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.th,
+.thCheck {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+
+.thCheck {
+  width: 40px;
+  text-align: center;
+  padding: 10px 8px;
+}
+
+.row {
+  transition: background 0.1s;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.rowExcluded {
+  opacity: 0.45;
+}
+
+.td,
+.tdCheck {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.tdCheck {
+  text-align: center;
+  padding: 10px 8px;
+  width: 40px;
+}
+
+.row:last-child .td,
+.row:last-child .tdCheck {
+  border-bottom: none;
+}
+
+.offerId {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.name {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oldValue {
+  color: var(--text-secondary);
+}
+
+.newValue {
+  font-weight: 600;
+}
+
+.increase {
+  color: #22c55e;
+}
+
+.decrease {
+  color: var(--danger-color);
+}
+
+.delta {
+  font-weight: 400;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
+.margin {
+  font-size: 0.8125rem;
+}
+
+.marginWarn {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.marginEmpty {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.summary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+
+.summary strong {
+  color: var(--text-primary);
+}
+
+.excludedNote {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}

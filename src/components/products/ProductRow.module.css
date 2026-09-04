@@ -1,0 +1,88 @@
+.checkbox {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent-color);
+    cursor: pointer;
+}
+
+.checkboxCell {
+    width: 26px;
+    text-align: center;
+}
+
+.statusCell {
+    width: 36px;
+    text-align: center;
+}
+
+.numericCell {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.nameCell {
+    text-align: left;
+}
+
+/* Row highlight states */
+.selectedRow td {
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* Critical (quarantine / price_rejected) — red left border */
+.problemRow td:first-child {
+    border-left: 3px solid #ef4444;
+}
+
+/* Warning (promo_below_cost) — orange left border */
+.warningRow td:first-child {
+    border-left: 3px solid #f97316;
+}
+
+/* Actions column sticky right */
+.actionsCell {
+    position: sticky;
+    right: 0;
+    background: var(--bg-primary);
+    z-index: 2;
+    text-align: center;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Make sticky bg follow selected/problem state */
+.selectedRow .actionsCell {
+    background: rgba(15, 23, 42, 1);
+}
+
+.actionButtons {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    align-items: center;
+}
+
+.iconBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.iconBtn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.refPctBadge {
+    font-size: 0.65rem;
+    font-weight: bold;
+    margin-top: 1px;
+}

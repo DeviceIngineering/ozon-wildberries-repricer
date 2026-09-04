@@ -1,0 +1,110 @@
+.productHeader {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.productName {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.productOffer {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.tableContainer {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 50vh;
+}
+
+.emptyText {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 0;
+}
+
+.historyTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.stickyHead {
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    z-index: 1;
+}
+
+.headerRow {
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.thLeft {
+    text-align: left;
+    padding: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+
+.thRight {
+    text-align: right;
+    padding: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+
+.dataRow {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dataRow:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dateCell {
+    padding: 10px;
+    color: var(--text-secondary);
+}
+
+.priceCell {
+    padding: 10px;
+    text-align: right;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.marketingCell {
+    padding: 10px;
+    text-align: right;
+    color: var(--text-primary);
+}
+
+.minPriceCell {
+    padding: 10px;
+    text-align: right;
+    color: #64748b;
+}
+
+.diffUp {
+    font-size: 0.75rem;
+    margin-left: 5px;
+    color: #ef4444;
+}
+
+.diffDown {
+    font-size: 0.75rem;
+    margin-left: 5px;
+    color: #4ade80;
+}

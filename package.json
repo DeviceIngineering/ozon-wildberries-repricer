@@ -1,0 +1,74 @@
+{
+  "name": "ozon-viewer",
+  "version": "3.0.0",
+  "description": "Multi-marketplace repricer for Ozon, Wildberries and Yandex Market: unit-economics price floors, promo auto-exit, Bayesian price experiments and an HTTP control plane for LLM agents.",
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "repricer",
+    "dynamic-pricing",
+    "ozon",
+    "wildberries",
+    "yandex-market",
+    "marketplace",
+    "pricing",
+    "ecommerce",
+    "llm-agent"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server.cjs",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "node seed-admin.mjs",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1034.0",
+    "@sentry/node": "^10.49.0",
+    "@sentry/react": "^10.49.0",
+    "axios": "^1.13.2",
+    "better-auth": "^1.5.5",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5",
+    "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "jsdom": "^28.1.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4",
+    "vitest": "^4.1.0"
+  }
+}

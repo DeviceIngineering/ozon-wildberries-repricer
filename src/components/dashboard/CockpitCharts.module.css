@@ -1,0 +1,21 @@
+.svg { width: 100%; height: auto; display: block; }
+
+.axis { fill: var(--text-muted); font-size: 10px; font-family: inherit; }
+.axisMono { fill: var(--text-muted); font-size: 10px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+.barVal { fill: var(--text-primary); font-size: 11px; font-weight: 600; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+.barOff { fill: var(--text-muted); font-size: 9px; font-family: inherit; }
+.barClickable { cursor: pointer; }
+.barClickable:hover rect:last-of-type { opacity: 0.82; }
+
+.empty { padding: 40px 12px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+.donutWrap { display: flex; align-items: center; gap: 18px; }
+.donutSvg { width: 140px; height: 140px; flex-shrink: 0; }
+.donutPct { fill: var(--text-primary); font-size: 22px; font-weight: 700; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+.donutSub { fill: var(--text-muted); font-size: 10px; }
+
+.donutLegend { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.legendRow { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+.legendDot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.legendName { color: var(--text-secondary); flex: 1; }
+.legendVal { color: var(--text-primary); font-weight: 600; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }

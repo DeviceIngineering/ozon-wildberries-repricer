@@ -1,0 +1,525 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-family: 'Outfit', sans-serif;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+/* Dark theme (default) */
+:root,
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-primary: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --success-gradient: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+  --danger-color: #ef4444;
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --table-header-bg: rgba(15, 23, 42, 0.95);
+  --table-hover: rgba(255, 255, 255, 0.03);
+  --table-border: rgba(255, 255, 255, 0.04);
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --badge-bg: rgba(59, 130, 246, 0.15);
+  --scrollbar-thumb: #334155;
+
+  /* Referenced by CSS modules with a fallback; define them once here. */
+  --text-muted: #64748b;
+  --radius-sm: 4px;
+
+  /* Semantic value colours. Separate from --accent-color: these encode
+     meaning (good / caution / bad), not brand. */
+  --value-ok: #4ade80;
+  --value-warn: #facc15;
+  --value-bad: #f87171;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg-color: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-primary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  --success-gradient: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+  --danger-color: #dc2626;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --table-header-bg: #e2e8f0;
+  --table-hover: rgba(0, 0, 0, 0.03);
+  --table-border: rgba(0, 0, 0, 0.08);
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --badge-bg: rgba(37, 99, 235, 0.1);
+  --scrollbar-thumb: #cbd5e1;
+
+  --text-muted: #475569;
+  --radius-sm: 4px;
+
+  /* Darker on a light ground: the dark-theme values fail WCAG AA here
+     (#facc15 on white is ~1.6:1, and these sit in price columns). */
+  --value-ok: #15803d;
+  --value-warn: #a16207;
+  --value-bad: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* --- Loader --- */
+.loading-screen {
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--text-secondary);
+  border-bottom-color: var(--accent-color);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Form globals --- */
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+/* Keyboard focus. :focus-visible only fires for keyboard navigation, so this
+   does not put a ring on every mouse click. Declared before the component
+   rules that set `outline: none` on :focus, and repeated with the same
+   specificity so it survives them. */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* --- Button globals --- */
+.primary-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+  font-family: inherit;
+}
+
+.primary-btn:hover {
+  opacity: 0.9;
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.export-btn {
+  background: var(--success-gradient);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.export-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.text-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-color);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: opacity 0.2s;
+}
+
+.text-btn:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* --- Error states --- */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  text-align: center;
+}
+
+.error-text {
+  color: var(--danger-color);
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* --- Pagination Toolbar (global — used in ProductTable) --- */
+.pagination-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 0 20px 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.pg-summary {
+  margin-right: auto;
+}
+
+.pg-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-arrow {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0 4px;
+}
+
+.nav-arrow:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.nav-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pg-numbers {
+  display: flex;
+  gap: 4px;
+}
+
+.page-num-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  min-width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.page-num-btn:hover:not(:disabled) {
+  background: var(--table-hover);
+  color: var(--text-primary);
+}
+
+.page-num-btn.active {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: var(--badge-bg);
+}
+
+.page-num-btn.dots {
+  cursor: default;
+  border: none;
+  background: none;
+}
+
+.size-select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pg-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.jump-input {
+  width: 50px;
+  padding: 6px 8px;
+  text-align: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+}
+
+/* --- Product Row global classes (used directly in ProductRow.tsx) --- */
+.img-cell {
+  width: 30px;
+  position: relative;
+}
+
+.img-cell img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.img-cell:hover img {
+  transform: scale(1.1);
+}
+
+/* Hover preview for product images */
+.img-cell::after {
+  content: '';
+  display: none;
+}
+
+.img-cell:hover .img-preview {
+  display: block;
+}
+
+.img-preview {
+  display: none;
+  position: absolute;
+  left: 32px;
+  top: -40px;
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  background: var(--bg-secondary);
+  pointer-events: none;
+}
+
+.no-img {
+  width: 24px;
+  height: 24px;
+  background: #334155;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.product-name {
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.product-meta {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.product-id,
+.product-offer {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1.2;
+}
+
+.price-cell {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.marketing-price-cell {
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.marketing-tag {
+  color: var(--value-warn);
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+}
+
+.min-price-cell {
+  font-size: 0.82rem;
+  color: var(--value-bad);
+  white-space: nowrap;
+}
+
+.old-price-cell {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Respect the OS "reduce motion" setting: the app animates panels, toasts and
+   spinners, which is exactly what this preference is about. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest a capability or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >
+        What situation costs you money or time today? Describe the situation,
+        not the solution — the useful part is the constraint you are under.
+    validations: { required: true }
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+    validations: { required: false }
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do instead right now

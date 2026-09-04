@@ -1,0 +1,110 @@
+.bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+.fieldGroup,
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  padding: 8px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 130px;
+}
+
+.select:focus {
+  border-color: var(--accent-color);
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 220px;
+}
+
+.input:focus {
+  border-color: var(--accent-color);
+}
+
+.inputError {
+  border-color: var(--danger-color) !important;
+}
+
+.errorMsg {
+  font-size: 0.75rem;
+  color: var(--danger-color);
+}
+
+.calcBtn {
+  align-self: flex-end;
+  background: var(--accent-color);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  font-weight: 600;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.calcBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.calcBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hint {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+
+.hintText {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}

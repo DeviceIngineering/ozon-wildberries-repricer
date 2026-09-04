@@ -1,0 +1,18 @@
+# Production overlay. Use together with the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Put this behind a TLS-terminating reverse proxy and set BETTER_AUTH_URL to the
+# https:// address — the session cookie is only marked Secure over HTTPS.
+services:
+  repricer:
+    build:
+      args:
+        SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-dev}
+    environment:
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?set the public https:// URL}
+    # Uncomment if your host's resolver cannot reach the marketplace APIs:
+    # dns:
+    #   - 8.8.8.8
+    #   - 1.1.1.1

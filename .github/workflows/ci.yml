@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # better-sqlite3 compiles from source on install.
+      - name: Install build toolchain
+        run: sudo apt-get update && sudo apt-get install -y python3 make g++
+
+      - run: npm ci
+
+      - name: Lint
+        run: npx eslint . --max-warnings 60
+
+      - name: Typecheck
+        run: npx tsc -p tsconfig.app.json --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t marketplace-repricer:ci .
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Cost prices, store names and API keys must never reach this repository.
+      - name: Scan for private data patterns
+        run: |
+          if grep -rInE '(BETTER_AUTH_SECRET|MOYSKLAD_TOKEN|API_KEY)=[A-Za-z0-9]{16,}' \
+               --exclude-dir=node_modules --exclude-dir=.git . ; then
+            echo "::error::A credential-looking value is committed"
+            exit 1
+          fi
+          if git ls-files | grep -qiE '\.(db|csv|xlsx|xls)$'; then
+            echo "::error::A database or spreadsheet is tracked in git"
+            exit 1
+          fi

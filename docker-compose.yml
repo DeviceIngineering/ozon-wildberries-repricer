@@ -1,0 +1,44 @@
+# Local development stack. One command to a running app:
+#   cp .env.example .env && docker compose up --build
+services:
+  repricer:
+    build:
+      context: .
+      args:
+        SENTRY_DSN_FRONTEND: ${VITE_SENTRY_DSN:-}
+        SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-dev}
+    container_name: repricer
+    restart: unless-stopped
+    stop_grace_period: 30s
+    ports:
+      - "${PORT_PUBLISHED:-3001}:3001"
+    volumes:
+      - repricer_data:/app/data
+      - repricer_uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_PATH=/app/data/repricer.db
+      - UPLOAD_DIR=/app/uploads
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3001}
+      - TRUSTED_ORIGINS=${TRUSTED_ORIGINS:-}
+      - FORCE_PUBLIC_DNS=${FORCE_PUBLIC_DNS:-0}
+      - EXTERNAL_API_KEY=${EXTERNAL_API_KEY:-}
+      - EXTERNAL_API_ALLOWED_IPS=${EXTERNAL_API_ALLOWED_IPS:-}
+      - EXTERNAL_API_RATE_PER_MIN=${EXTERNAL_API_RATE_PER_MIN:-120}
+      - SENTRY_DSN_BACKEND=${SENTRY_DSN_BACKEND:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
+      - S3_ENDPOINT=${S3_ENDPOINT:-}
+      - S3_REGION=${S3_REGION:-}
+      - S3_BUCKET=${S3_BUCKET:-}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-}
+      - S3_PREFIX=${S3_PREFIX:-repricer/}
+      - BACKUP_RETAIN=${BACKUP_RETAIN:-7}
+      - BACKUP_HOUR=${BACKUP_HOUR:-3}
+
+volumes:
+  repricer_data:
+  repricer_uploads:

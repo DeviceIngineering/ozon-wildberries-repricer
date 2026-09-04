@@ -1,0 +1,142 @@
+.container {
+    padding: 4px 8px;
+    width: 100%;
+    animation: slideUp 0.4s ease-out;
+    font-size: 0.78rem;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Single-line compact toolbar */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0 6px;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    flex-wrap: wrap;
+}
+
+.pgSummary {
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.tableWrapper {
+    background: var(--glass-bg);
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    overflow-x: auto;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 16px;
+    min-height: 300px;
+}
+
+.productsTable {
+    border-collapse: collapse;
+    text-align: center;
+    table-layout: fixed;
+}
+
+.productsTable th {
+    text-align: center;
+}
+
+/* Sticky thead */
+.productsTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.productsTable th {
+    padding: 4px 6px;
+    background: var(--table-header-bg);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+}
+
+.resizableTh {
+    position: relative;
+}
+
+.resizeHandle {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 5;
+    user-select: none;
+}
+
+.resizeHandle:hover,
+.resizeHandle:active {
+    background: var(--accent-color);
+    opacity: 0.5;
+}
+
+/* Sticky actions column header */
+.stickyActions {
+    position: sticky;
+    right: 0;
+    z-index: 11;
+    background: var(--table-header-bg) !important;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.sortableTh {
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+}
+
+.sortableTh:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.productsTable td {
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: middle;
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.productsTable tr:last-child td {
+    border-bottom: none;
+}
+
+.productsTable tbody tr:hover td {
+    background: var(--table-hover);
+}
+
+.emptyMessage {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 20px;
+    font-size: 0.9rem;
+}

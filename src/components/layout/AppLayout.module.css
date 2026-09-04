@@ -1,0 +1,36 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* On a phone the sidebar and the content cannot share a row: the content
+   column ends up too narrow to read. Stack them, and let the sidebar
+   scroll horizontally as a strip. */
+@media (max-width: 720px) {
+  .body {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .main {
+    overflow-y: visible;
+  }
+}

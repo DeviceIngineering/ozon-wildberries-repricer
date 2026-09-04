@@ -1,0 +1,140 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.allOk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-md);
+  color: #4ade80;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.okIcon {
+  font-size: 1.2rem;
+}
+
+.group {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.group.critical {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.group.warning {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.group.info {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.groupTitle {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.critical .groupTitle {
+  color: #ef4444;
+}
+
+.warning .groupTitle {
+  color: #f59e0b;
+}
+
+.info .groupTitle {
+  color: var(--accent-color);
+}
+
+.alertList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.alertItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.alertItem:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.alertIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.alertStore {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.alertCount {
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.critical .alertCount {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.warning .alertCount {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.info .alertCount {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--accent-color);
+}
+
+.alertDesc {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.alertArrow {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.alertItem:hover .alertArrow {
+  transform: translateX(3px);
+}

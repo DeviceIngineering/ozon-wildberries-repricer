@@ -1,0 +1,201 @@
+.formCard {
+    background: var(--glass-bg);
+    padding: 30px;
+    border-radius: var(--radius-lg);
+}
+
+.formTitle {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.labelSmall {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.input {
+    width: 100%;
+    padding: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.inputSmall {
+    width: 100%;
+    padding: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.input:focus,
+.inputSmall:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.selectWrapper {
+    position: relative;
+}
+
+.select {
+    width: 100%;
+    padding: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    appearance: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.selectArrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.checkbox {
+    accent-color: var(--accent-color);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--table-hover);
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 30px;
+    border: 1px solid var(--glass-border);
+}
+
+.checkboxLabel {
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.repricerBlock {
+    background: var(--badge-bg);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 10px;
+    border: 1px solid var(--glass-border);
+}
+
+.repricerHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.repricerTitle {
+    margin: 0;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.repricerTitleActive {
+    margin: 0;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #10b981;
+}
+
+.repricerFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.submitRow {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+/* Platform toggle */
+.platformToggle {
+    display: flex;
+    gap: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.platformBtn {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--input-bg);
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.platformBtn:hover {
+    background: var(--table-hover);
+}
+
+.platformBtnActive {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.platformBtnActiveYm {
+    background: rgba(250, 204, 21, 0.15);
+    color: #facc15;
+}

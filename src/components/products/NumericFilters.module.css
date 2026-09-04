@@ -1,0 +1,131 @@
+.wrapper {
+    position: relative;
+}
+
+.trigger {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.trigger:hover {
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+}
+
+.triggerActive {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 50;
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 14px;
+    min-width: 300px;
+    box-shadow: var(--shadow-lg);
+    animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.label {
+    flex: 1;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.rangeInput {
+    width: 72px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-family: inherit;
+}
+
+.rangeInput:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.rangeInputError {
+    border-color: var(--danger-color);
+}
+
+.rangeInputError:focus {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.error {
+    color: var(--danger-color);
+    font-size: 0.72rem;
+    padding: 0 0 4px 0;
+    margin-top: -4px;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.resetBtn, .applyBtn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.resetBtn {
+    background: transparent;
+    border: 1px solid var(--input-border);
+    color: var(--text-secondary);
+}
+
+.resetBtn:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+.applyBtn {
+    background: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    color: white;
+    font-weight: 500;
+}
+
+.applyBtn:hover {
+    filter: brightness(1.1);
+}

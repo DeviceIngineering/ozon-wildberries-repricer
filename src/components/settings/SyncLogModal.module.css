@@ -1,0 +1,178 @@
+.tableContainer {
+    overflow-y: auto;
+    max-height: 55vh;
+    margin: 0 -4px;
+}
+
+.emptyText {
+    color: var(--text-secondary);
+    padding: 30px;
+    text-align: center;
+}
+
+.logsTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stickyHead {
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    z-index: 10;
+}
+
+.headerRow {
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.thId {
+    padding: 15px 30px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.thLeft {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.thRight {
+    padding: 15px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.thCenter {
+    padding: 15px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dataRow {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+}
+
+.expandedRow {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tdId {
+    padding: 15px 30px;
+    color: var(--text-secondary);
+}
+
+.td {
+    padding: 15px;
+    color: var(--text-primary);
+}
+
+.tdRight {
+    padding: 15px;
+    text-align: right;
+}
+
+.tdCenter {
+    padding: 15px;
+    text-align: center;
+}
+
+.statusSuccess {
+    color: #4ade80;
+    font-weight: 500;
+}
+
+.statusError {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.statusWarning {
+    color: #fbbf24;
+    font-weight: 500;
+}
+
+.changedCount {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.detailsCell {
+    padding: 0;
+    background: #0f172a;
+}
+
+.detailsContainer {
+    padding: 15px 30px;
+}
+
+.noDetails {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.detailsTableWrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.detailsTable {
+    width: 100%;
+    font-size: 0.85rem;
+    border-collapse: collapse;
+}
+
+.detailRow {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.detailTime {
+    padding: 8px;
+    color: var(--text-secondary);
+    width: 80px;
+    white-space: nowrap;
+}
+
+.detailStage {
+    padding: 8px;
+    font-weight: bold;
+    color: #cbd5e1;
+    width: 150px;
+    white-space: nowrap;
+}
+
+.detailMessage {
+    padding: 8px;
+    color: #e2e8f0;
+}
+
+.detailError {
+    padding: 8px;
+    color: #ef4444;
+}
+
+.detailWarning {
+    padding: 8px;
+    color: #fbbf24;
+}

@@ -1,0 +1,54 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste API keys, real store names, cost prices or SKUs.**
+        Replace them with placeholders before submitting.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Marketplace
+      options: [Ozon, Wildberries, Yandex Market, Not platform-specific]
+    validations: { required: true }
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the exact behaviour, and what you expected instead.
+    validations: { required: true }
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Store settings: min_margin_percent = 20, tax_rate = 6
+        2. Ran the repricer for a product with cost_price = 400
+        3. ...
+    validations: { required: true }
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        From the repricer log, strategy log or api_logs. Redact keys and
+        store names. This is rendered as code, no backticks needed.
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations: { required: true }
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: Node 20.11 on Debian 12 / Docker
