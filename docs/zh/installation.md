@@ -26,7 +26,7 @@
 ## 2. 安装依赖
 
 ```bash
-git clone <你的仓库地址> && cd public_repricer
+git clone <你的仓库地址> && cd marketplace-repricer
 npm ci
 ```
 

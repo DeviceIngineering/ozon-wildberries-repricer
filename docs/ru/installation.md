@@ -26,7 +26,7 @@
 ## 2. Установка зависимостей
 
 ```bash
-git clone <адрес-вашего-форка> && cd public_repricer
+git clone <адрес-вашего-форка> && cd marketplace-repricer
 npm ci
 ```
 

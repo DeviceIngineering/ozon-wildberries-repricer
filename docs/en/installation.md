@@ -26,7 +26,7 @@ From `git clone` to your first working store. Every step was checked against the
 ## 2. Install dependencies
 
 ```bash
-git clone <your-fork-url> && cd public_repricer
+git clone <your-fork-url> && cd marketplace-repricer
 npm ci
 ```
 
