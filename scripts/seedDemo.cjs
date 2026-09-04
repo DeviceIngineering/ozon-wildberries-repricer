@@ -315,14 +315,23 @@ function main() {
 
     const { totalProducts, totalSales } = tx();
 
+    // better-auth creates the user table on its own first run, so it may not
+    // exist yet in a brand-new database.
+    let hasUser = false;
+    try { hasUser = db.prepare('SELECT COUNT(*) n FROM user').get().n > 0; } catch { /* table not created yet */ }
+
     console.log(
         `Demo data ready:\n` +
         `  ${STORES.length} stores (Ozon, Wildberries, Yandex)\n` +
         `  ${totalProducts} products, including items below floor, promotions under\n` +
         `    cost, missing cost prices, quarantine and one running experiment\n` +
         `  ${totalSales} daily sales rows across 60 days\n\n` +
-        `None of these credentials are real and nothing here contacts a marketplace.\n` +
-        `Remove with: npm run seed:demo -- --reset`
+        `None of these credentials are real and nothing here contacts a marketplace.\n\n` +
+        (hasUser
+            ? `Sign in with your existing account.\n`
+            : `There is no user yet — create one to sign in:\n` +
+              `  DB_PATH=${process.env.DB_PATH || './ozon.db'} ADMIN_PASSWORD='at-least-12-chars' npm run seed\n`) +
+        `\nRemove the demo data with: npm run seed:demo -- --reset`
     );
 }
 

@@ -111,7 +111,8 @@ Both themes are supported:
 ### Try it without a marketplace account
 
 ```bash
-npm run demo
+npm run demo                                             # seeds demo.db and starts the app
+DB_PATH=./demo.db ADMIN_PASSWORD='at-least-12-chars' npm run seed   # once, to be able to sign in
 ```
 
 Seeds a synthetic catalogue — three stores, 42 products, 60 days of sales, deliberately including items below floor, promotions under cost, missing cost prices and one running experiment — into `demo.db` and starts the app. No credentials are involved and nothing contacts a marketplace. The screenshots above are exactly what this produces.
