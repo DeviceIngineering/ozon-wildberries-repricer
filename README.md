@@ -86,6 +86,55 @@ See [docs/en/api-external.md](docs/en/api-external.md) and [docs/en/llm-agent.md
 
 ---
 
+## Setting up a store — a form, not a config file
+
+A store is added from the Settings page: pick the marketplace, paste the keys from your seller account, done. No config files, no restart, no environment variables — keys live in the database rather than in `.env`, so you can register as many seller accounts as you need, each with its own settings.
+
+Most of the settings are about economics, and they are set **per store**, because tax regime and target margin differ from one legal entity to the next:
+
+| Setting | What it does |
+|---|---|
+| **Tax rate** | Feeds into the break-even calculation. Zero means zero percent (a patent or self-employment regime), not "disabled" |
+| **Minimum margin** | What you want to earn on top of the cost price. Raises the price floor |
+| **Drop / rise threshold** | How far the price has to drift from the reference price before the repricer steps in. Keeps it from twitching over kopecks |
+| **Repricer interval** | How often prices are checked — anywhere from minutes to hours |
+| **Boost cap in the floor** | An upper bound on the reconstructed Yandex boost rate, so an anomaly in the statistics cannot inflate the floor |
+| **Max price rise per run** | Stops the price from jumping too far in one go |
+| **Loss-making promotion guard** | Pull products out of a promotion whose promo price is below cost |
+| **Automatic promotion exit** | Pull products out of any promotion that is not on the allowlist |
+| **Max discount in allowed promotions** | Even an approved promotion must not cut deeper than this percentage |
+| **Anti-ban delay** | Pause between requests to the marketplace |
+
+All of it can be changed on the fly and takes effect on the next run.
+
+---
+
+## Driving prices with an LLM agent
+
+The repricer exposes an external HTTP API (`/api/ext/v1`) designed on the assumption that a language model is on the other end of it. In practice that looks like an ordinary request:
+
+> "Cut prices in store X by 20%"
+> "Raise prices across every store by 30%"
+> "Test a hypothesis: what happens to this group of products at 15% below the current price"
+
+The value is not that the command can be phrased in words — it is that **the agent cannot do damage with it**. Between the request and the marketplace sit rails that know things the model does not:
+
+**A steep price change is stepped.** Wildberries sends a product to quarantine if the price falls by more than 1.5× — the price is simply not applied and the product drops out of search. The repricer knows about that threshold, and when the target sits below it, walks there over several runs, staying just short of the threshold each time. The same limit applies inside price experiments, where the log marks it explicitly as `quarantine cap`.
+
+**Verification that the price actually landed.** Three minutes after a write, the price is read back from the marketplace. Marketplaces routinely answer "success" to a change they never made; such a write is flagged `VERIFIED_FAIL`, so you see it now rather than finding out a month later.
+
+**Promotions.** A price change can drag a product into a promotion — the marketplace does that on its own. The next automatic-exit cycle (every 5 minutes by default) pulls it back out if the promotion is not on the allowlist, or if the discount is deeper than allowed.
+
+**Limits on the request itself.** A change of more than 15% from the reference price in a single write is rejected. An operation touching more than 200 SKUs requires explicit confirmation. A product with no known cost price will not accept a new price at all — no floor means no protection. Every threshold is configurable.
+
+**It stays clear who did what.** Every agent call is journalled: who, what, how many positions it touched. Before any mass write a price snapshot is taken, and you can roll back to it.
+
+When there are several agents — each in its own chat — they do not overwrite each other's decisions: the context carries a version, a stale write is rejected, and a product under experiment belongs to the agent running it. Details are in the [agent instructions](docs/en/llm-agent.md) and the [API reference](docs/en/api-external.md).
+
+> Separately from the repricer, the author maintains MCP servers for [Ozon](https://github.com/DeviceIngineering/ozon-mcp-server) and [Wildberries](https://github.com/DeviceIngineering/wb-mcp-server), which give a model direct access to seller accounts. This repository contains no MCP server: what it offers is an HTTP API, and an agent can be wired to it however you prefer.
+
+---
+
 ## What it looks like
 
 **The decision cockpit** — not a metrics dashboard. Every card is a problem with money attached and a button that resolves it.
@@ -116,6 +165,43 @@ DB_PATH=./demo.db ADMIN_PASSWORD='at-least-12-chars' npm run seed   # once, to b
 ```
 
 Seeds a synthetic catalogue — three stores, 42 products, 60 days of sales, deliberately including items below floor, promotions under cost, missing cost prices and one running experiment — into `demo.db` and starts the app. No credentials are involved and nothing contacts a marketplace. The screenshots above are exactly what this produces.
+
+---
+
+## Where to run it
+
+Nothing is required beyond Node.js: one process, one SQLite file. Which leaves two ways to live with it.
+
+**On your own machine.** Good enough for taking a look, trying it against a single store, getting a feel for the logic. The limitation is obvious: the repricer runs only while the computer is on. Close the laptop and nobody is holding your prices, nobody is exiting promotions, and that day's sales are never collected.
+
+**On a rented server (VPS).** This is what the whole thing was built for: it runs around the clock without you. Once a minute it checks whether a repricer run is due; at night it collects sales and takes a backup; every hour it checks whether somebody else's API has broken.
+
+The smallest VPS is enough:
+
+| | Minimum | Comfortable |
+|---|---|---|
+| CPU | 1 core | 2 cores |
+| Memory | 1 GB | 2 GB |
+| Disk | 10 GB | 20 GB or more |
+| OS | anything with Docker or Node 20 | — |
+
+For disk, the rule of thumb is this: the database grows along with price history, request logs and day-by-day sales. Over half a year of running eight seller accounts, the author's came to roughly 500 MB. Turn on the built-in nightly backup to S3-compatible storage right away.
+
+The server must have **a static IP from a reputable provider, and must not run through a VPN** — that is a direct requirement of the Ozon Seller API rules, and a violation hits your seller account, not this program. There is no need to expose a port: if you want to reach the UI from outside, put a TLS reverse proxy in front of the app (see [SECURITY.md](SECURITY.md)).
+
+Deployment on a server is `docker compose`; details are in the [installation guide](docs/en/installation.md).
+
+---
+
+## Proven in production
+
+This was not written for some hypothetical future — it has been running real trading since March 2026.
+
+- **Eight seller accounts at once:** three on Ozon, two on Wildberries, three on Yandex Market.
+- All three marketplaces run in parallel, with different tax settings and different economics.
+- There is no fixed limit on how many accounts you can have: they are just rows in a table, each with its own keys and its own schedule.
+
+**An honest word about the scaling ceiling.** In the author's experience it arrives somewhere around **15–20 seller accounts on a single marketplace**: from one IP address the marketplace starts throttling requests. That is an estimate rather than a measured limit, and it depends on catalogue size and how often runs happen. Proxy rotation is not implemented — if you need more accounts, you will have to add it yourself, or spread the accounts across several servers.
 
 ---
 
@@ -190,9 +276,10 @@ Marketplace API keys are **not** environment variables — they are entered per 
 | Installation | [en](docs/en/installation.md) | [ru](docs/ru/installation.md) | [zh](docs/zh/installation.md) |
 | User guide | [en](docs/en/user-guide.md) | [ru](docs/ru/user-guide.md) | [zh](docs/zh/user-guide.md) |
 | Architecture | [en](docs/en/architecture.md) | [ru](docs/ru/architecture.md) | [zh](docs/zh/architecture.md) |
-| Pricing strategies | [en](docs/en/strategies.md) | [ru](docs/ru/strategies.md) | — |
-| External API | [en](docs/en/api-external.md) | [ru](docs/ru/api-external.md) | — |
-| LLM agent instructions | [en](docs/en/llm-agent.md) | [ru](docs/ru/llm-agent.md) | — |
+| **How a price is decided** | [en](docs/en/pricing.md) | [ru](docs/ru/pricing.md) | [zh](docs/zh/pricing.md) |
+| Pricing strategies | [en](docs/en/strategies.md) | [ru](docs/ru/strategies.md) | [zh](docs/zh/strategies.md) |
+| External API | [en](docs/en/api-external.md) | [ru](docs/ru/api-external.md) | [zh](docs/zh/api-external.md) |
+| LLM agent instructions | [en](docs/en/llm-agent.md) | [ru](docs/ru/llm-agent.md) | [zh](docs/zh/llm-agent.md) |
 
 ---
 
