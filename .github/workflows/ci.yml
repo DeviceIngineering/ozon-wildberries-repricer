@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build image
-        run: docker build -t marketplace-repricer:ci .
+        run: docker build -t ozon-wildberries-repricer:ci .
 
   secrets:
     runs-on: ubuntu-latest

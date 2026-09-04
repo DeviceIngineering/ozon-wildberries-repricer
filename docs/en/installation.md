@@ -57,7 +57,7 @@ The demo refuses to run against a database that already holds real stores.
 ## 2. Install dependencies
 
 ```bash
-git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/ozon-wildberries-repricer.git && cd ozon-wildberries-repricer
 npm ci
 ```
 

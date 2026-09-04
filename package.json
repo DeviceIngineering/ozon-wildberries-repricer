@@ -1,26 +1,36 @@
 {
-  "name": "marketplace-repricer",
+  "name": "ozon-wildberries-repricer",
   "version": "3.0.0",
-  "description": "Multi-marketplace repricer for Ozon, Wildberries and Yandex Market: unit-economics price floors, promo auto-exit, Bayesian price experiments and an HTTP control plane for LLM agents.",
+  "description": "Репрайсер для Ozon, Wildberries и Яндекс.Маркета: защита маржи по реальным тарифам, автовывод из акций, байесовский подбор цены, API для LLM-агентов. Multi-marketplace repricer with unit-economics price floors and promo auto-exit.",
   "license": "MIT",
   "author": "DeviceIngineering",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DeviceIngineering/marketplace-repricer.git"
+    "url": "git+https://github.com/DeviceIngineering/ozon-wildberries-repricer.git"
   },
   "engines": {
     "node": ">=20"
   },
   "keywords": [
     "repricer",
+    "repricing",
     "dynamic-pricing",
+    "price-automation",
+    "price-optimization",
     "ozon",
     "wildberries",
     "yandex-market",
+    "ozon-api",
+    "wildberries-api",
     "marketplace",
-    "pricing",
+    "marketplace-api",
+    "seller-tools",
     "ecommerce",
-    "llm-agent"
+    "pricing",
+    "unit-economics",
+    "bayesian-optimization",
+    "llm-agent",
+    "mcp"
   ],
   "type": "module",
   "scripts": {
@@ -74,7 +84,7 @@
     "vitest": "^4.1.0"
   },
   "bugs": {
-    "url": "https://github.com/DeviceIngineering/marketplace-repricer/issues"
+    "url": "https://github.com/DeviceIngineering/ozon-wildberries-repricer/issues"
   },
-  "homepage": "https://github.com/DeviceIngineering/marketplace-repricer#readme"
+  "homepage": "https://github.com/DeviceIngineering/ozon-wildberries-repricer#readme"
 }

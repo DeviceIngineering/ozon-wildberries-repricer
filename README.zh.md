@@ -1,6 +1,6 @@
-# Marketplace Repricer
+# Ozon / Wildberries / Yandex Market 自动调价系统
 
-面向 **Ozon**、**Wildberries** 和 **Yandex Market** 卖家的自动调价系统。这三家是俄罗斯最大的电商平台。
+面向 **Ozon**、**Wildberries** 和 **Yandex Market** 卖家的自动调价（repricer）与价格管理系统。这三家是俄罗斯最大的电商平台。
 
 它把价格稳定在你设定的基准价上，拒绝以低于保本价的价格出售——保本价按各平台真实费率计算，把会亏本的商品从促销活动中撤出，并且可以选择通过在真实销量上做受控实验来寻找更优价格。
 
@@ -134,7 +134,7 @@ SQLite 单文件 + WAL · 多阶段 Dockerfile · Sentry（可选）
 **环境要求：** Node 20+，以及编译原生模块所需的工具链（`python3`、`make`、`g++`）——`better-sqlite3` 在安装时需要编译。
 
 ```bash
-git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/ozon-wildberries-repricer.git && cd ozon-wildberries-repricer
 npm ci
 
 cp .env.example .env

@@ -1,6 +1,6 @@
-# Marketplace Repricer
+# Ozon / Wildberries / Yandex Market Repricer
 
-Automated pricing for sellers on **Ozon**, **Wildberries** and **Yandex Market** — the three largest e-commerce marketplaces in Russia.
+Automated repricing and price management for sellers on **Ozon**, **Wildberries** and **Yandex Market** — the three largest e-commerce marketplaces in Russia. Русскоязычное описание: **[README.ru.md](README.ru.md)**.
 
 It keeps your prices at the reference level you set, refuses to sell below a break-even floor computed from each platform's real fees, pulls products out of promotions that would push them under cost, and — optionally — searches for a better price by running a controlled experiment on live sales.
 
@@ -134,7 +134,7 @@ Roughly 35 000 lines. 155 tests over the pricing maths, the strategy engine, the
 **Requirements:** Node 20+, and a toolchain for native modules (`python3`, `make`, `g++`) because `better-sqlite3` compiles on install.
 
 ```bash
-git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/ozon-wildberries-repricer.git && cd ozon-wildberries-repricer
 npm ci
 
 cp .env.example .env

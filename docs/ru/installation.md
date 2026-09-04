@@ -57,7 +57,7 @@ DB_PATH=./demo.db npm run seed:demo -- --reset
 ## 2. Установка зависимостей
 
 ```bash
-git clone https://github.com/DeviceIngineering/marketplace-repricer.git && cd marketplace-repricer
+git clone https://github.com/DeviceIngineering/ozon-wildberries-repricer.git && cd ozon-wildberries-repricer
 npm ci
 ```
 
