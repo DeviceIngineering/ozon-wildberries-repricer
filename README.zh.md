@@ -138,6 +138,8 @@ Wildberries 没有「退出活动」的接口，因此退出是通过 Prices API
 如果智能体不止一个——各自待在自己的会话里——它们也不会互相覆盖决策：上下文带版本号，过期的写入会被拒绝，处于实验中的商品归负责它的那个智能体所有。详见[智能体使用说明](docs/zh/llm-agent.md)和 [API 说明](docs/zh/api-external.md)。
 
 > 在调价器之外，作者还另有面向 [Ozon](https://github.com/DeviceIngineering/ozon-mcp-server) 和 [Wildberries](https://github.com/DeviceIngineering/wb-mcp-server) 的 MCP 服务器——它们让模型可以直接访问卖家后台。本仓库不包含 MCP 服务器：这里提供的是 HTTP API，用任何顺手的方式把智能体接上去都行。
+>
+> 针对这些平台，开源生态中还有哪些工具，见 [awesome-ru-marketplace-tools](https://github.com/DeviceIngineering/awesome-ru-marketplace-tools)。
 
 ---
 

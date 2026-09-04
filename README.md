@@ -138,6 +138,8 @@ Between steps the price is read back from the marketplace, so each step starts f
 When there are several agents — each in its own chat — they do not overwrite each other's decisions: the context carries a version, a stale write is rejected, and a product under experiment belongs to the agent running it. Details are in the [agent instructions](docs/en/llm-agent.md) and the [API reference](docs/en/api-external.md).
 
 > Separately from the repricer, the author maintains MCP servers for [Ozon](https://github.com/DeviceIngineering/ozon-mcp-server) and [Wildberries](https://github.com/DeviceIngineering/wb-mcp-server), which give a model direct access to seller accounts. This repository contains no MCP server: what it offers is an HTTP API, and an agent can be wired to it however you prefer.
+>
+> For what else exists in the open for these marketplaces, see [awesome-ru-marketplace-tools](https://github.com/DeviceIngineering/awesome-ru-marketplace-tools).
 
 ---
 

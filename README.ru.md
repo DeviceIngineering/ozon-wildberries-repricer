@@ -140,6 +140,8 @@
 Если агентов несколько — каждый в своём чате, — они не затирают решения друг друга: у контекста есть версия, устаревшая запись отклоняется, товар в эксперименте принадлежит тому агенту, который его ведёт. Подробности — в [инструкции для агента](docs/ru/llm-agent.md) и [описании API](docs/ru/api-external.md).
 
 > Отдельно от репрайсера у автора есть MCP-серверы для [Ozon](https://github.com/DeviceIngineering/ozon-mcp-server) и [Wildberries](https://github.com/DeviceIngineering/wb-mcp-server) — они дают модели доступ к кабинетам напрямую. Этот репозиторий MCP-сервера не содержит: здесь HTTP-API, и подключить к нему агента можно любым удобным способом.
+>
+> Что ещё есть в открытом доступе для работы с российскими площадками — в списке [awesome-ru-marketplace-tools](https://github.com/DeviceIngineering/awesome-ru-marketplace-tools).
 
 ---
 
