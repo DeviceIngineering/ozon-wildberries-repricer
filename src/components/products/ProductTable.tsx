@@ -1,5 +1,5 @@
 import React from 'react';
-import type { OzonProduct } from '../../services/ozonApi';
+import type { OzonProduct, PriceUpdateResponse } from '../../services/ozonApi';
 import { useSelection } from '../../contexts/SelectionContext';
 import ProductRow from './ProductRow';
 import PriceEditModal from './PriceEditModal';
@@ -36,7 +36,7 @@ interface ProductTableProps {
     onPageChange: (page: number) => void;
     onPageSizeChange: (size: number) => void;
     onExportExcel: () => void;
-    onPriceUpdate: (productId: number, offerId: string, newPrice: number, oldPrice: number, minPrice: number) => Promise<void>;
+    onPriceUpdate: (productId: number, offerId: string, newPrice: number, oldPrice: number, minPrice: number) => Promise<PriceUpdateResponse>;
     numericFilters: NumericFilterValues;
     onApplyNumericFilters: (v: NumericFilterValues) => void;
 }

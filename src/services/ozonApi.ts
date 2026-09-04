@@ -1,17 +1,26 @@
 import axios from 'axios';
 
+/**
+ * Товар из `GET /api/stores/:id/products`.
+ *
+ * Собирается на бэкенде из двух источников (db/products.cjs): сырого ответа
+ * площадки в `data_json` и колонок таблицы `products`. Отсюда разнобой в форме
+ * ценовых полей: Ozon отдаёт цены строками ("1990.0000"), Wildberries — числами,
+ * и оба варианта долетают до фронта как есть. Приводить к числу нужно на месте
+ * использования; насильно приводить в типе — значит врать про половину товаров.
+ */
 export interface OzonProduct {
     offer_id: string;
     product_id: number;
     name?: string;
     primary_image?: string;
-    price?: string;
+    price?: string | number | null;
     currency_code?: string;
-    marketing_price?: string; // Marketing Seller Price
-    old_price?: string;
+    marketing_price?: string | number | null; // Marketing Seller Price
+    old_price?: string | number | null;
     stock?: number;
     // Removed premium_price as it's often missing/calculated
-    min_price?: string;
+    min_price?: string | number | null; // у WB всегда null: площадка мин. цену не хранит
     ref_price?: number | string;
     ref_min_price?: number | string;
     cost_price?: number;
@@ -147,6 +156,13 @@ export interface PaginatedResponse<T> {
     pageSize: number;
 }
 
+/**
+ * Ответ `GET /api/stores/:id/products`. Страницу с `items`/`total` роут отдаёт
+ * только когда в запросе были параметры пагинации, поиска или фильтров; без них —
+ * плоский массив всех товаров магазина (обратная совместимость, routes/stores.cjs).
+ */
+export type ProductsResponse = PaginatedResponse<OzonProduct> | OzonProduct[];
+
 export interface PriceUpdatePending {
     id: number;
     store_id: string;
@@ -158,6 +174,33 @@ export interface PriceUpdatePending {
     verify_after: string;
     verified_at: string | null;
     actual_price: number | null;
+}
+
+/**
+ * Ошибка по одному товару из ответа Ozon `/v1/product/import/prices`.
+ * Бэкенд складывает такие записи в `_itemErrors` и отдаёт их как `item_errors`:
+ * HTTP при этом 200, отказ виден только здесь.
+ */
+export interface PriceUpdateItemError {
+    offer_id: string;
+    updated?: boolean;
+    errors: Array<{ code?: string; message?: string }>;
+}
+
+/** Ответ `POST /api/stores/:id/update-prices` (routes/stores.cjs). */
+export interface PriceUpdateResponse {
+    success: boolean;
+    item_errors?: PriceUpdateItemError[];
+}
+
+/**
+ * Ответ `POST /api/stores/:id/products/:productId/sync`.
+ * При ошибке фетчер возвращает `{ success: false, error }` со статусом 500.
+ */
+export interface SyncProductResponse {
+    success: boolean;
+    product?: OzonProduct;
+    error?: string;
 }
 
 export const runRepricerNow = async (storeId: string): Promise<void> => {

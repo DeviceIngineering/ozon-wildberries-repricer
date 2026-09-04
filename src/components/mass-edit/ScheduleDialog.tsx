@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
+import { errorMessage } from '../../services/apiError';
 import styles from './ScheduleDialog.module.css';
 
 interface ScheduleUpdate {
@@ -69,8 +70,8 @@ export default function ScheduleDialog({
       }
       onScheduled();
       onClose();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(errorMessage(e));
     } finally {
       setIsLoading(false);
     }

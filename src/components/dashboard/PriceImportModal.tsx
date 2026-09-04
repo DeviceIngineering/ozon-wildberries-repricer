@@ -6,6 +6,7 @@ const axios = ax.create({ withCredentials: true });
 import Tooltip from '../ui/Tooltip';
 import { useToast } from '../../contexts/ToastContext';
 import styles from './PriceImportModal.module.css';
+import { apiErrorMessage } from '../../services/apiError';
 
 interface PriceImportModalProps {
   storeId: string;
@@ -129,8 +130,8 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
       });
       setSelected(sel);
       setStep('preview');
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка при загрузке файла');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка при загрузке файла'));
     } finally {
       setLoading(false);
     }
@@ -225,8 +226,8 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
       setResultCount(count);
       setStep('result');
       showSuccess(`Эталонные цены сохранены: ${count} позиций`);
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка сохранения');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка сохранения'));
     } finally {
       setLoading(false);
     }
@@ -245,8 +246,8 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
       setResultCount(data.sent_count || items.length);
       setStep('result');
       showSuccess(`Отправлено в ${platformLabel}: ${data.sent_count || items.length} позиций`);
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка отправки');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка отправки'));
     } finally {
       setLoading(false);
     }

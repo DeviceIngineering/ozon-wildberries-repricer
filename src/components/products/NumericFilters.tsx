@@ -31,8 +31,8 @@ type DraftState = Record<string, string>;
 function valuesToDraft(value: NumericFilterValues): DraftState {
     const draft: DraftState = {};
     for (const { key } of FIELDS) {
-        draft[`${key}_min`] = value[`${key}_min` as keyof NumericFilterValues]?.toString() ?? '';
-        draft[`${key}_max`] = value[`${key}_max` as keyof NumericFilterValues]?.toString() ?? '';
+        draft[`${key}_min`] = value[`${key}_min` as const]?.toString() ?? '';
+        draft[`${key}_max`] = value[`${key}_max` as const]?.toString() ?? '';
     }
     return draft;
 }
@@ -86,13 +86,15 @@ const NumericFilters: React.FC<NumericFiltersProps> = ({ value, onApply }) => {
         const parsed: NumericFilterValues = {};
 
         for (const { key } of FIELDS) {
-            const minRaw = draft[`${key}_min`];
-            const maxRaw = draft[`${key}_max`];
+            const minKey = `${key}_min` as const;
+            const maxKey = `${key}_max` as const;
+            const minRaw = draft[minKey];
+            const maxRaw = draft[maxKey];
             const min = minRaw !== '' ? parseFloat(minRaw) : undefined;
             const max = maxRaw !== '' ? parseFloat(maxRaw) : undefined;
 
-            if (min !== undefined && !Number.isNaN(min)) (parsed as any)[`${key}_min`] = min;
-            if (max !== undefined && !Number.isNaN(max)) (parsed as any)[`${key}_max`] = max;
+            if (min !== undefined && !Number.isNaN(min)) parsed[minKey] = min;
+            if (max !== undefined && !Number.isNaN(max)) parsed[maxKey] = max;
 
             if (
                 min !== undefined && !Number.isNaN(min) &&

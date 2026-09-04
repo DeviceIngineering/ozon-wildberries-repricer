@@ -4,6 +4,7 @@ import ax from 'axios';
 const axios = ax.create({ withCredentials: true });
 import { useToast } from '../../contexts/ToastContext';
 import styles from './RepricerLogModal.module.css';
+import { apiErrorMessage } from '../../services/apiError';
 
 interface RepricerLogModalProps {
   storeId: string;
@@ -93,8 +94,8 @@ export default function RepricerLogModal({ storeId, storeName, onClose }: Repric
       );
       setLogs(data.rows);
       setTotal(data.total);
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка загрузки логов');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка загрузки логов'));
       setLogs([]);
     } finally {
       setLoading(false);

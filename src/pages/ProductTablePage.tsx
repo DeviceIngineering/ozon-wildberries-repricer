@@ -7,8 +7,14 @@ import { type NumericFilterValues } from '../components/products/NumericFilters'
 import { useStores } from '../contexts/StoreContext';
 import { useToast } from '../contexts/ToastContext';
 import { SelectionProvider } from '../contexts/SelectionContext';
-import type { OzonProduct, DashboardSummary } from '../services/ozonApi';
+import type {
+    OzonProduct,
+    DashboardSummary,
+    ProductsResponse,
+    PriceUpdateResponse,
+} from '../services/ozonApi';
 import { runRepricerNow, runMonitorNow } from '../services/ozonApi';
+import { errorMessage, type ApiErrorBody } from '../services/apiError';
 import styles from './ProductTablePage.module.css';
 
 function ageMin(dateStr: string | null | undefined): number {
@@ -42,7 +48,7 @@ function parseNumericFiltersFromUrl(searchParams: URLSearchParams): NumericFilte
         const raw = searchParams.get(key);
         if (raw === null || raw === '') continue;
         const n = Number(raw);
-        if (!Number.isNaN(n)) (result as any)[key] = n;
+        if (!Number.isNaN(n)) result[key] = n;
     }
     return result;
 }
@@ -183,7 +189,9 @@ export default function ProductTablePage() {
                 const qs = buildQuery(page, size, sort, search, filter, filters);
                 const res = await fetch(`${API_BASE}/api/stores/${id}/products?${qs}`);
                 if (!res.ok) throw new Error('Не удалось загрузить товары');
-                const data = await res.json();
+                // Роут отвечает страницей, только если пришли параметры пагинации/фильтров,
+                // иначе — плоским массивом (см. routes/stores.cjs GET /:id/products).
+                const data: ProductsResponse = await res.json();
 
                 // Support both paginated response and plain array (backward compat)
                 if (Array.isArray(data)) {
@@ -193,10 +201,10 @@ export default function ProductTablePage() {
                     setProducts(data.items ?? []);
                     setTotal(data.total ?? 0);
                 }
-            } catch (err: any) {
+            } catch (err) {
                 console.error(err);
-                setError(err.message);
-                showError('Ошибка загрузки товаров: ' + err.message);
+                setError(errorMessage(err));
+                showError('Ошибка загрузки товаров: ' + errorMessage(err));
             } finally {
                 setIsLoading(false);
             }
@@ -209,7 +217,7 @@ export default function ProductTablePage() {
         try {
             const res = await fetch(`${API_BASE}/api/stores/${id}/products`);
             if (!res.ok) return;
-            const data = await res.json();
+            const data: ProductsResponse = await res.json();
             setAllProducts(Array.isArray(data) ? data : (data.items ?? []));
         } catch {
             // Silent — counters are optional
@@ -279,7 +287,7 @@ export default function ProductTablePage() {
                     const qs = buildQuery(1, 10000, sortConfig, searchQuery, activeFilter, numericFilters);
                     const res = await fetch(`${API_BASE}/api/stores/${storeId}/products?${qs}`);
                     if (res.ok) {
-                        const data = await res.json();
+                        const data: ProductsResponse = await res.json();
                         exportData = Array.isArray(data) ? data : (data.items ?? exportData);
                     }
                 } catch {
@@ -291,10 +299,10 @@ export default function ProductTablePage() {
                 'ID': p.product_id,
                 'Артикул': p.offer_id,
                 'Название': p.name,
-                'Цена продажи': parseFloat(p.price || '0'),
-                'Маркетинговая цена': parseFloat(p.marketing_price || '0'),
-                'Мин. цена': parseFloat(p.min_price || '0'),
-                'Старая цена': parseFloat(p.old_price || '0'),
+                'Цена продажи': parseFloat(String(p.price || '0')),
+                'Маркетинговая цена': parseFloat(String(p.marketing_price || '0')),
+                'Мин. цена': parseFloat(String(p.min_price || '0')),
+                'Старая цена': parseFloat(String(p.old_price || '0')),
                 'Себестоимость': p.cost_price ?? '',
                 'Валюта': p.currency_code,
             }));
@@ -341,17 +349,17 @@ export default function ProductTablePage() {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData: ApiErrorBody = await response.json();
             throw new Error(errorData.error || 'Ошибка обновления цены');
         }
 
-        const result = await response.json();
+        const result: PriceUpdateResponse = await response.json();
         if (!result.success) throw new Error('Не удалось обновить цену');
 
         // Проверить per-item ошибки от Ozon
         if (result.item_errors && result.item_errors.length > 0) {
             const errMsg = result.item_errors.map(
-                (e: any) => `${e.offer_id}: ${e.errors.map((err: any) => err.message || err.code).join(', ')}`
+                (e) => `${e.offer_id}: ${e.errors.map((err) => err.message || err.code).join(', ')}`
             ).join('; ');
             throw new Error(`Ozon отклонил: ${errMsg}`);
         }

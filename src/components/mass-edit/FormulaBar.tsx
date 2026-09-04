@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { parseFormula, applyFormula, type Formula } from '../../utils/formulaParser';
 import type { OzonProduct } from '../../services/ozonApi';
+import { errorMessage } from '../../services/apiError';
 import styles from './FormulaBar.module.css';
 
 export type FieldType = 'price' | 'min_price' | 'old_price';
@@ -28,9 +29,9 @@ function getFieldLabel(field: FieldType): string {
 
 function getProductField(product: OzonProduct, field: FieldType): number {
   switch (field) {
-    case 'price': return parseFloat(product.price || '0');
-    case 'min_price': return parseFloat(product.min_price || '0');
-    case 'old_price': return parseFloat(product.old_price || '0');
+    case 'price': return parseFloat(String(product.price || '0'));
+    case 'min_price': return parseFloat(String(product.min_price || '0'));
+    case 'old_price': return parseFloat(String(product.old_price || '0'));
   }
 }
 
@@ -48,8 +49,8 @@ export default function FormulaBar({ products, onCalculate }: FormulaBarProps) {
       const formula = parseFormula(input);
       setError(null);
       return formula;
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(errorMessage(e));
       return null;
     }
   }, []);

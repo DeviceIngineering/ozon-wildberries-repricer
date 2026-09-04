@@ -20,8 +20,10 @@ interface EditCell {
   field: PriceField;
 }
 
-function parsePrice(val: string | undefined): number {
-  return parseFloat(val || '0') || 0;
+// Ozon отдаёт цену строкой, WB — числом; String() повторяет то приведение,
+// которое parseFloat и так делал бы сам.
+function parsePrice(val: string | number | null | undefined): number {
+  return parseFloat(String(val || '0')) || 0;
 }
 
 function formatPrice(value: number): string {

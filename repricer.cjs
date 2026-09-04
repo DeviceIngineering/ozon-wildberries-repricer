@@ -4,6 +4,7 @@ const ozonFetcher = require('./ozonFetcher.cjs');
 const { createOzonClient } = require('./lib/ozonClient.cjs');
 const { computeOldPrice } = require('./lib/priceHelpers.cjs');
 const { computeFloorMinPrice } = require('./lib/priceFloor.cjs');
+const { capStep, limitsFor } = require('./lib/priceStep.cjs');
 
 // Запись в repricer_log с гарантией видимости ошибки записи (SQLITE_BUSY и т.п.)
 function logRepricerSafe(storeId, logId, entry) {
@@ -451,7 +452,7 @@ async function enforceYandexFloor(store, dbProductsJSON, currentPrices, logId) {
     const marginPct = parseFloat(store.min_margin_percent) || 0;
     // Потолок буст-буфера и шаг роста цены за прогон (мягкий предохранитель)
     const boostCap = store.ym_boost_cap_percent != null ? parseFloat(store.ym_boost_cap_percent) : 30;
-    const maxRaisePct = store.ym_floor_max_raise_percent != null ? parseFloat(store.ym_floor_max_raise_percent) : 20;
+    const maxRaisePct = limitsFor(store).raisePct;   // для текста лога; сам предел применяет capStep
 
     // Гард: не молчим, если налог не задан — floor посчитается (как % с выручки = 0),
     // но защита неполная. Раньше при tax_rate=0 весь блок тихо пропускался.
@@ -550,13 +551,14 @@ async function enforceYandexFloor(store, dbProductsJSON, currentPrices, logId) {
 
         if (c.price < floor) {
             breaches++;
-            // Мягкий предохранитель: за один прогон не задираем цену больше чем на maxRaisePct.
-            // Floor достигается за несколько прогонов — не теряем buybox разом.
-            const capByStep = Math.ceil(c.price * (1 + maxRaisePct / 100));
-            const target = Math.min(floor, capByStep);
+            // Мягкий предохранитель: за один прогон не задираем цену больше чем
+            // на max_raise_percent — floor достигается за несколько прогонов, не
+            // теряем buybox разом. Пределы шага — в lib/priceStep.cjs.
+            const step = capStep({ current: c.price, target: floor, store, floor });
+            const target = step.applied;
             const jumpPct = (target - c.price) / c.price * 100;
             maxJumpPct = Math.max(maxJumpPct, jumpPct);
-            const partial = target < floor;
+            const partial = step.capped;
             if (partial) cappedRaises++;
             await db.addLogEntry(logId, 'WARNING', 'YM_FLOOR_BREACH',
                 `[${c.offerId}] цена ${c.price} < floor ${floor} ` +
@@ -794,14 +796,11 @@ async function enforceWbRepricing(store, dbProductsJSON, dbProdMap, refMap, logI
         let target = ref.price;
         if (floor != null && floor > target) { target = floor; raisedToFloor++; }
 
-        // Ступенчатое снижение: WB кладёт товар в карантин при резком падении цены (порог 1.5x–3x).
-        // Если цель ниже текущей более чем в QUAR_RATIO раз — снижаем частично, добьём в следующих прогонах.
-        const QUAR_RATIO = 1.5;            // WB кладёт в карантин при дропе ≥1.5x
-        const QUAR_STEP = QUAR_RATIO - 0.05; // шаг чуть мягче порога, чтобы не сесть на границу
-        if (currentDiscounted > 0 && target > 0 && target < currentDiscounted / QUAR_RATIO) {
-            target = Math.ceil(currentDiscounted / QUAR_STEP);
-            stepwise++;
-        }
+        // Ступенчатое изменение цены: пороги и логика — в lib/priceStep.cjs,
+        // общем для репрайсера и движка стратегий.
+        const step = capStep({ current: currentDiscounted, target, store, floor });
+        target = step.applied;
+        if (step.capped) stepwise++;
 
         const pair = computeWbPricePair(target, currentDiscount);
         const newDiscounted = discountedFromPair(pair.price, pair.discount);

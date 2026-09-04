@@ -23,7 +23,7 @@ jobs:
       - run: npm ci
 
       - name: Lint
-        run: npx eslint . --max-warnings 60
+        run: npx eslint . --max-warnings 25
 
       - name: Typecheck
         run: npx tsc -p tsconfig.app.json --noEmit

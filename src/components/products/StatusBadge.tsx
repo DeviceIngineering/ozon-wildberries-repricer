@@ -35,10 +35,13 @@ export function getProductStatus(product: OzonProduct): StatusInfo {
     }
 
     // 3. Акция ниже себестоимости
+    // != null отсекает и null, и undefined: из SQLite эти колонки приходят
+    // как null, а `null < cost_price` коэрсится в `0 < cost_price` и красит
+    // в «убыток» любой товар в акции без заполненной промо-цены.
     if (
         product.in_promo === 1 &&
-        product.promo_price !== undefined &&
-        product.cost_price !== undefined &&
+        product.promo_price != null &&
+        product.cost_price != null &&
         product.promo_price < product.cost_price
     ) {
         return {

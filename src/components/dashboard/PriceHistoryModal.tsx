@@ -4,6 +4,7 @@ import Modal from '../ui/Modal';
 const axios = ax.create({ withCredentials: true });
 import { useToast } from '../../contexts/ToastContext';
 import styles from './PriceHistoryModal.module.css';
+import { apiErrorMessage } from '../../services/apiError';
 
 interface PriceHistoryModalProps {
   storeId: string;
@@ -28,6 +29,15 @@ interface SnapshotItem {
   old_price?: number;
   min_price?: number;
   new_price?: number;
+}
+
+/**
+ * Ответ `GET /api/stores/:id/snapshots/:snapshotId` — это строка таблицы
+ * price_snapshots как есть. Позиции лежат в колонке snapshot_json типа TEXT,
+ * то есть приходят JSON-строкой, а не массивом; NULL возможен у пустого снимка.
+ */
+interface SnapshotDetail {
+  snapshot_json: string | null;
 }
 
 export default function PriceHistoryModal({ storeId, storeName, onClose }: PriceHistoryModalProps) {
@@ -56,8 +66,8 @@ export default function PriceHistoryModal({ storeId, storeName, onClose }: Price
         { params: { category } }
       );
       setSnapshots(data);
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка загрузки снапшотов');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка загрузки снапшотов'));
       setSnapshots([]);
     } finally {
       setLoading(false);
@@ -77,8 +87,10 @@ export default function PriceHistoryModal({ storeId, storeName, onClose }: Price
     setExpandLoading(true);
     setExpandedId(snapshotId);
     try {
-      const { data } = await axios.get(`/api/stores/${storeId}/snapshots/${snapshotId}`);
-      const json = typeof data.snapshot_json === 'string' ? JSON.parse(data.snapshot_json) : (data.snapshot_json ?? []);
+      const { data } = await axios.get<SnapshotDetail>(`/api/stores/${storeId}/snapshots/${snapshotId}`);
+      const json: SnapshotItem[] = typeof data.snapshot_json === 'string'
+        ? JSON.parse(data.snapshot_json)
+        : (data.snapshot_json ?? []);
       setExpandedItems(json);
     } catch {
       showError('Не удалось загрузить данные снапшота');
@@ -96,8 +108,8 @@ export default function PriceHistoryModal({ storeId, storeName, onClose }: Price
       showSuccess('Откат выполнен');
       setRollbackId(null);
       fetchSnapshots(tab);
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка отката');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка отката'));
     } finally {
       setRollbackLoading(false);
     }

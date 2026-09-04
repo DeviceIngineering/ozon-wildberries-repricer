@@ -1,14 +1,15 @@
 import React from 'react';
 import Modal from '../ui/Modal';
 import { useToast } from '../../contexts/ToastContext';
-import type { OzonProduct } from '../../services/ozonApi';
+import type { OzonProduct, SyncProductResponse, PriceUpdateResponse } from '../../services/ozonApi';
+import { errorMessage } from '../../services/apiError';
 import styles from './PriceEditModal.module.css';
 
 interface PriceEditModalProps {
     product: OzonProduct | null;
     storeId: string | null;
     onClose: () => void;
-    onPriceUpdate: (productId: number, offerId: string, newPrice: number, oldPrice: number, minPrice: number) => Promise<void>;
+    onPriceUpdate: (productId: number, offerId: string, newPrice: number, oldPrice: number, minPrice: number) => Promise<PriceUpdateResponse>;
 }
 
 const PriceEditModal: React.FC<PriceEditModalProps> = ({ product, storeId, onClose, onPriceUpdate }) => {
@@ -87,8 +88,8 @@ const PriceEditModal: React.FC<PriceEditModalProps> = ({ product, storeId, onClo
                 handleClose();
                 showSuccess('Цена успешно обновлена!');
             }
-        } catch (err: any) {
-            showError('Ошибка обновления цены: ' + (err.message || 'Неизвестная ошибка'));
+        } catch (err) {
+            showError('Ошибка обновления цены: ' + (errorMessage(err) || 'Неизвестная ошибка'));
         } finally {
             setIsUpdating(false);
         }
@@ -99,13 +100,13 @@ const PriceEditModal: React.FC<PriceEditModalProps> = ({ product, storeId, onClo
         setIsSyncingSingle(true);
         try {
             const res = await fetch(`/api/stores/${storeId}/products/${productId}/sync`, { method: 'POST' });
-            const data = await res.json();
+            const data: SyncProductResponse = await res.json();
             if (data.success) {
                 if (editingProduct && editingProduct.product_id === productId) {
                     setEditingProduct({ ...editingProduct, ...data.product });
-                    setNewPrice(data.product.price?.toString() || '');
-                    setNewMinPrice(data.product.min_price?.toString() || '');
-                    setNewOldPrice(data.product.old_price?.toString() || '');
+                    setNewPrice(data.product?.price?.toString() || '');
+                    setNewMinPrice(data.product?.min_price?.toString() || '');
+                    setNewOldPrice(data.product?.old_price?.toString() || '');
                     setWasSynced(true);
                 }
                 showSuccess('Товар успешно синхронизирован с Ozon!');
@@ -113,8 +114,8 @@ const PriceEditModal: React.FC<PriceEditModalProps> = ({ product, storeId, onClo
             } else {
                 showError('Ошибка синхронизации: ' + data.error);
             }
-        } catch (err: any) {
-            showError('Ошибка запроса: ' + err.message);
+        } catch (err) {
+            showError('Ошибка запроса: ' + errorMessage(err));
         } finally {
             setIsSyncingSingle(false);
         }
@@ -126,8 +127,8 @@ const PriceEditModal: React.FC<PriceEditModalProps> = ({ product, storeId, onClo
             fetch(`/api/stores/${storeId}/sync`, { method: 'POST' });
             showSuccess('Запущена полная синхронизация магазина. Это займет некоторое время.');
             handleClose();
-        } catch (err: any) {
-            showError('Ошибка запуска синхронизации: ' + err.message);
+        } catch (err) {
+            showError('Ошибка запуска синхронизации: ' + errorMessage(err));
         }
     };
 

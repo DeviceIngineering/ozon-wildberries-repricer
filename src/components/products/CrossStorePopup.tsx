@@ -4,12 +4,17 @@ import styles from './CrossStorePopup.module.css';
 
 const API_BASE = '';
 
+/**
+ * Строка `GET /api/products/:offerId/cross-store`. price и marketing_price
+ * достаются из data_json через json_extract, поэтому форма наследует площадку:
+ * у Ozon в JSON лежит строка, у Wildberries — число, и SQLite отдаёт их как есть.
+ */
 interface CrossStoreEntry {
     store_id: string;
     store_name: string;
-    price: string | null;
+    price: string | number | null;
     cost_price: number | null;
-    marketing_price: string | null;
+    marketing_price: string | number | null;
 }
 
 interface CrossStorePopupProps {
@@ -18,23 +23,23 @@ interface CrossStorePopupProps {
     onClose: () => void;
 }
 
-function computeMarginPct(price: string | null, marketingPrice: string | null, costPrice: number | null): string {
+function computeMarginPct(price: string | number | null, marketingPrice: string | number | null, costPrice: number | null): string {
     if (!costPrice) return '—';
     const raw = marketingPrice && marketingPrice !== '0' && marketingPrice !== '0.00'
         ? marketingPrice
         : price;
-    const p = parseFloat(raw || '0');
+    const p = parseFloat(String(raw || '0'));
     if (!p) return '—';
     const m = ((p - costPrice) / p) * 100;
     return m.toFixed(1) + '%';
 }
 
-function marginColor(price: string | null, marketingPrice: string | null, costPrice: number | null): string {
+function marginColor(price: string | number | null, marketingPrice: string | number | null, costPrice: number | null): string {
     if (!costPrice) return 'var(--text-secondary)';
     const raw = marketingPrice && marketingPrice !== '0' && marketingPrice !== '0.00'
         ? marketingPrice
         : price;
-    const p = parseFloat(raw || '0');
+    const p = parseFloat(String(raw || '0'));
     if (!p) return 'var(--text-secondary)';
     const m = ((p - costPrice) / p) * 100;
     if (m >= 30) return '#4ade80';

@@ -11,6 +11,7 @@
 const db = require('./db.cjs');
 const Sentry = require('./sentry.server.cjs');
 const { decide } = require('./lib/strategyEngine.cjs');
+const { capStep } = require('./lib/priceStep.cjs');
 const { computeWbFloor, computeBoxLogistics, computeWbPricePair } = require('./lib/wbPricing.cjs');
 
 async function buildWbEcon(store, storeId) {
@@ -85,17 +86,17 @@ async function runStore(storeId) {
 
         const d = decide(state, obs, econ, opts);
 
-        // Карантин-защита WB: дроп цены ≥1.5x кладёт товар в карантин (цена не применится).
-        // Ограничиваем падение за прогон до ~31% — до целевой цены доходим за несколько прогонов.
-        // appliedPrice — то, что реально выставим; целевую (d.nextPrice) движок достигнет ступенчато.
-        const QUAR_RATIO = 1.5;            // WB кладёт в карантин при дропе ≥1.5x
-        const QUAR_STEP = QUAR_RATIO - 0.05; // шаг чуть мягче порога, чтобы не сесть на границу
+        // Пределы шага цены за прогон — в lib/priceStep.cjs (тот же модуль, что и
+        // в репрайсере). Целевую цену движка достигаем ступенчато; current_price
+        // продвигается только по фактически выставленной цене — см. ниже.
         let appliedPrice = d.nextPrice;
         let capped = false;
-        if (store.platform === 'wildberries' && appliedPrice != null && state.current_price > 0
-            && appliedPrice < state.current_price / QUAR_RATIO) {
-            appliedPrice = Math.ceil(state.current_price / QUAR_STEP);
-            capped = true;
+        if (appliedPrice != null && state.current_price > 0) {
+            const step = capStep({
+                current: state.current_price, target: appliedPrice, store, floor: econ.floor,
+            });
+            appliedPrice = step.applied;
+            capped = step.capped;
         }
 
         const autoApply = (exp && exp.auto_apply) ? 1 : 0;

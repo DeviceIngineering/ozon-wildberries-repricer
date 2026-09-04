@@ -388,6 +388,10 @@ function runMigrations() {
         // YM floor: потолок буст-буфера (%), шаг роста цены за прогон (%), авто-вывод из акций
         { name: 'ym_boost_cap_percent', type: 'REAL DEFAULT 30' },
         { name: 'ym_floor_max_raise_percent', type: 'REAL DEFAULT 20' },
+        // Пределы шага цены за прогон. Общие для всех площадок: ym_floor_max_raise_percent
+        // остаётся как прежнее имя max_raise_percent и читается, если новое не задано.
+        { name: 'max_raise_percent', type: 'REAL' },
+        { name: 'max_drop_ratio', type: 'REAL' },
         { name: 'ym_promo_exit_enabled', type: 'INTEGER DEFAULT 0' },
         // Wildberries: единый персональный токен (scope «Цены и скидки», «Контент», «Аналитика», «Продвижение»)
         { name: 'wb_api_key', type: 'TEXT' },

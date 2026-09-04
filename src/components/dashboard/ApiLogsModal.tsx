@@ -4,6 +4,7 @@ import Modal from '../ui/Modal';
 const axios = ax.create({ withCredentials: true });
 import { useToast } from '../../contexts/ToastContext';
 import styles from './ApiLogsModal.module.css';
+import { apiErrorMessage } from '../../services/apiError';
 
 interface ApiLogsModalProps {
   storeId: string;
@@ -77,8 +78,8 @@ export default function ApiLogsModal({ storeId, storeName, onClose }: ApiLogsMod
       );
       setLogs(data.rows);
       setTotal(data.total);
-    } catch (err: any) {
-      showError(err?.response?.data?.error || 'Ошибка загрузки логов');
+    } catch (err) {
+      showError(apiErrorMessage(err, 'Ошибка загрузки логов'));
       setLogs([]);
     } finally {
       setLoading(false);

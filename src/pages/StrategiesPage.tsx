@@ -8,6 +8,7 @@ import {
     getOverview, getLog, pilotAuto, setExperimentAuto, setStoreKillSwitch, setGlobalKillSwitch, runStrategy, assignStrategy,
     STRATEGY_LABELS, type StrategyOverviewRow, type StrategyLogRow,
 } from '../services/strategiesApi';
+import { apiErrorMessage } from '../services/apiError';
 import styles from './StrategiesPage.module.css';
 
 const STRATEGIES = ['max_profit', 'max_revenue', 'max_units', 'liquidation'];
@@ -33,8 +34,8 @@ export default function StrategiesPage() {
         try {
             const [ov, lg] = await Promise.all([getOverview(storeId), getLog(storeId, 100)]);
             setOverview(ov); setLog(lg);
-        } catch (e: any) {
-            showError(e?.response?.data?.error || 'Ошибка загрузки');
+        } catch (e) {
+            showError(apiErrorMessage(e, 'Ошибка загрузки'));
         } finally { setLoading(false); }
     }, [storeId, showError]);
 
@@ -46,13 +47,13 @@ export default function StrategiesPage() {
             const r = await pilotAuto(storeId, { strategy_type: pilotStrategy, limit: pilotLimit, window_days: 30 });
             showSuccess(`Назначено товаров: ${r.assigned} (топ по продажам)`);
             load();
-        } catch (e: any) { showError(e?.response?.data?.error || 'Нужна история продаж'); }
+        } catch (e) { showError(apiErrorMessage(e, 'Нужна история продаж')); }
     };
 
     const toggleAuto = async (offer: string, on: boolean) => {
         if (!storeId) return;
         try { await setExperimentAuto(storeId, offer, on); load(); }
-        catch (e: any) { showError(e?.response?.data?.error || 'Ошибка'); }
+        catch (e) { showError(apiErrorMessage(e, 'Ошибка')); }
     };
 
     const removeStrategy = async (offer: string) => {
@@ -64,7 +65,7 @@ export default function StrategiesPage() {
     const handleRun = async () => {
         if (!storeId) return;
         try { const r = await runStrategy(storeId); showSuccess(`Прогон: товаров ${r.result?.count ?? 0}, применено ${r.result?.applied ?? 0}`); load(); }
-        catch (e: any) { showError(e?.response?.data?.error || 'Ошибка прогона'); }
+        catch (e) { showError(apiErrorMessage(e, 'Ошибка прогона')); }
     };
 
     // Остановка ценообразования — необратимое для текущего цикла действие:
@@ -87,7 +88,9 @@ export default function StrategiesPage() {
         if (scope === 'global') handleGlobalKill(true);
     };
 
-    const fmt = (v: any) => (v == null ? '—' : Number(v).toLocaleString('ru-RU'));
+    // cur_price приходит из json_extract: у Ozon это строка, у WB — число.
+    const fmt = (v: string | number | null | undefined) =>
+        (v == null ? '—' : Number(v).toLocaleString('ru-RU'));
 
     return (
         <div className={styles.page}>

@@ -27,7 +27,7 @@ function computeMargin(product: OzonProduct): number | null {
         product.marketing_price && product.marketing_price !== '0' && product.marketing_price !== '0.00'
             ? product.marketing_price
             : product.price;
-    const price = parseFloat(raw || '0');
+    const price = parseFloat(String(raw || '0'));
     if (!price) return null;
     return ((price - product.cost_price) / price) * 100;
 }
@@ -109,11 +109,11 @@ const ProductRow: React.FC<ProductRowProps> = ({
             return <span style={{ color: 'var(--text-muted)' }}>-</span>;
         }
 
-        const curr = parseFloat(
+        const curr = parseFloat(String(
             product.marketing_price && product.marketing_price !== '0' && product.marketing_price !== '0.00'
                 ? product.marketing_price
                 : product.price || '0'
-        );
+        ));
 
         if (curr > 0) {
             const refPrice = parseFloat(String(product.ref_price));
@@ -218,7 +218,12 @@ const ProductRow: React.FC<ProductRowProps> = ({
             <td key="floor_min_price" className={styles.numericCell}>
                 {product.floor_min_price != null ? (
                     <span style={{
-                        color: parseFloat(product.min_price || '0') < product.floor_min_price ? 'var(--value-bad)' : '#22c55e',
+                        // Сравниваем floor с минимальной ценой, только если она
+                        // задана: у Wildberries min_price всегда null, и раньше
+                        // 0 < floor красило порог в красный у всех товаров подряд.
+                        color: product.min_price != null && parseFloat(String(product.min_price)) < product.floor_min_price
+                            ? 'var(--value-bad)'
+                            : 'var(--value-ok)',
                         fontWeight: 500
                     }}>
                         {product.floor_min_price.toLocaleString('ru-RU')} ₽
@@ -279,11 +284,11 @@ const ProductRow: React.FC<ProductRowProps> = ({
         risk: (
             <td key="risk" className={styles.numericCell}>
                 {(() => {
-                    const effective = parseFloat(
+                    const effective = parseFloat(String(
                         product.marketing_price && product.marketing_price !== '0' && product.marketing_price !== '0.00'
                             ? product.marketing_price
                             : product.price || '0'
-                    );
+                    ));
                     if (!effective) return <Tooltip text="Нет цены — невозможно оценить риск" position="top"><span style={{ color: 'var(--text-muted)' }}>—</span></Tooltip>;
                     const cost = product.cost_price;
                     const ref = product.ref_price ? parseFloat(String(product.ref_price)) : null;

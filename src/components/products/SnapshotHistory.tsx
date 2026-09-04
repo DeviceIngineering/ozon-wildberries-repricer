@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Modal from '../ui/Modal';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useToast } from '../../contexts/ToastContext';
+import { errorMessage } from '../../services/apiError';
 import styles from './SnapshotHistory.module.css';
 
 const API_BASE = '';
@@ -48,10 +49,10 @@ export default function SnapshotHistory({ isOpen, storeId, onClose }: SnapshotHi
         try {
             const res = await fetch(`${API_BASE}/api/stores/${storeId}/snapshots`);
             if (!res.ok) throw new Error('Не удалось загрузить историю');
-            const data = await res.json();
+            const data: Snapshot[] = await res.json();
             setSnapshots(data);
-        } catch (err: any) {
-            showError('Ошибка загрузки истории: ' + err.message);
+        } catch (err) {
+            showError('Ошибка загрузки истории: ' + errorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -73,8 +74,8 @@ export default function SnapshotHistory({ isOpen, storeId, onClose }: SnapshotHi
             if (!res.ok) throw new Error('Откат не удался');
             showSuccess('Цены успешно откачены');
             setRollbackTarget(null);
-        } catch (err: any) {
-            showError('Ошибка отката: ' + err.message);
+        } catch (err) {
+            showError('Ошибка отката: ' + errorMessage(err));
         } finally {
             setRolling(false);
         }

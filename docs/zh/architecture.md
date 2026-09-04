@@ -354,7 +354,7 @@ HTTP 中，客户端读取资源得到 `ETag`，写入时带上 `If-Match: <etag
 - **进程级全局限流。** WB 对整个卖家账号施加严格限额，因此 `lib/wbClient.cjs` 为整个进程维护一条队列（`globalChain`、`MIN_REQUEST_INTERVAL_MS = 1200`，约每 6 秒 5 个请求并留有余量）。按客户端各自排队没有用：同步、调价、退出活动各自创建客户端，合在一起就会突发并触发 `429`。重试最多 3 次，优先按 `X-Ratelimit-Retry` 响应头等待，否则指数退避。
 - **没有统一的 `baseURL`。** 按方法族分为六个主机（`content`、`prices`、`calendar`、`common`、`analytics`、`statistics`），客户端创建时不设 base URL，完整 URL 由抓取器拼装。
 - **不要自定义 IPv4 agent。** 注释记录：带 `keepAlive` 的自定义 agent 会导致 `discounts-prices-api` 上的套接字挂死；WB 主机不提供 AAAA 记录，默认解析器足以应对。
-- **降价过猛会进隔离区。** 价格降幅约达 1.5–3 倍时，WB 会把商品放入价格隔离区，新价格根本不会生效。因此 `repricer.cjs` 采用阶梯降价：`QUAR_RATIO = 1.5`，若目标价比当前价低出 1.5 倍以上，本轮只降到 `⌈current / 1.45⌉`（`QUAR_STEP = QUAR_RATIO − 0.05`，避免正好卡在阈值上），余下部分由后续轮次完成。同时 `fetchQuarantine()` 读取 `/api/v2/quarantine/goods` 并在同步日志中写入告警。
+- **降价过猛会进隔离区。** 价格降幅约达 1.5–3 倍时，WB 会把商品放入价格隔离区，新价格根本不会生效。步长限制现在收敛在 `lib/priceStep.cjs`，由调价器与策略引擎共用：当目标价低于阈值时，单轮只降到 `⌈current / 1.45⌉`（在 1.5 阈值下留 0.05 的余量，避免正好卡在阈值上），剩余部分由后续轮次完成。阈值按店铺配置（`max_drop_ratio`），且只有 Wildberries 有默认值 —— Ozon 与 Yandex 没有实测阈值，凭空编一个还不如把这道护栏关掉。反方向的限制 `max_raise_percent`（默认每轮 20%）则防止价格一次性跳涨；旧设置名 `ym_floor_max_raise_percent` 仍然有效。同时 `fetchQuarantine()` 读取 `/api/v2/quarantine/goods` 并在同步日志中写入告警。
 - **价格异步生效。** WB 返回 `taskId`；是否真正生效不由回验器判断，而是通过隔离区和 `syncStore` 中重新读取价格来确认。
 - **Excel 导入不会向 WB 下发价格。** 导入只写入基准价与成本价，下发交由调价器完成 —— 直接推送会破坏 `price`/`discount` 组合，并可能把商品送进隔离区。
 - **已下线的库存接口。** `statistics-api /api/v1/supplier/stocks` 自 2026 年 08 月起返回 404；库存改用异步报表 `warehouse_remains`（创建 → 每 10 秒轮询状态、最长 150 秒 → 下载）。

@@ -45,6 +45,47 @@ export interface AssignConfig {
     liquidation_max_loss_pct?: number;
 }
 
+/** Ответ на назначение стратегии: `assigned` — сколько товаров реально записано. */
+export interface AssignResponse {
+    success: boolean;
+    assigned: number;
+}
+
+/** Пилот дополнительно возвращает выбранный топ по продажам за окно. */
+export interface PilotAutoResponse extends AssignResponse {
+    offers: Array<{ offer_id: string; units: number }>;
+}
+
+/** Роуты-переключатели (auto-apply, kill-switch магазина) отвечают только статусом. */
+export interface OkResponse {
+    success: boolean;
+}
+
+export interface GlobalKillSwitchResponse extends OkResponse {
+    global_kill_switch: boolean;
+}
+
+/**
+ * Итог прогона. `strategyRunner.runStore` возвращает либо `{ skipped }`
+ * (kill-switch, нет магазина), либо счётчики — поэтому все поля опциональны.
+ */
+export interface StrategyRunResult {
+    count?: number;
+    applied?: number;
+    skipped?: string;
+    results?: Array<{
+        offer: string;
+        action: string;
+        next: number | null;
+        applied: boolean;
+    }>;
+}
+
+export interface StrategyRunResponse {
+    success: boolean;
+    result: StrategyRunResult;
+}
+
 export const STRATEGY_LABELS: Record<string, string> = {
     ref_price: 'РРЦ (по умолчанию)',
     max_profit: 'Макс. прибыль',
@@ -60,19 +101,19 @@ export const getLog = (storeId: string, limit = 200) =>
     api.get<StrategyLogRow[]>(`/api/stores/${storeId}/strategy/log?limit=${limit}`).then(r => r.data);
 
 export const assignStrategy = (storeId: string, offerIds: string[], config: AssignConfig) =>
-    api.post(`/api/stores/${storeId}/strategy/assign`, { offerIds, ...config }).then(r => r.data);
+    api.post<AssignResponse>(`/api/stores/${storeId}/strategy/assign`, { offerIds, ...config }).then(r => r.data);
 
 export const pilotAuto = (storeId: string, config: AssignConfig & { limit?: number; window_days?: number }) =>
-    api.post(`/api/stores/${storeId}/strategy/pilot-auto`, config).then(r => r.data);
+    api.post<PilotAutoResponse>(`/api/stores/${storeId}/strategy/pilot-auto`, config).then(r => r.data);
 
 export const setExperimentAuto = (storeId: string, offerId: string, on: boolean) =>
-    api.post(`/api/stores/${storeId}/strategy/experiment/${offerId}/auto`, { on }).then(r => r.data);
+    api.post<OkResponse>(`/api/stores/${storeId}/strategy/experiment/${offerId}/auto`, { on }).then(r => r.data);
 
 export const setStoreKillSwitch = (storeId: string, on: boolean) =>
-    api.post(`/api/stores/${storeId}/strategy/kill-switch`, { on }).then(r => r.data);
+    api.post<OkResponse>(`/api/stores/${storeId}/strategy/kill-switch`, { on }).then(r => r.data);
 
 export const setGlobalKillSwitch = (on: boolean) =>
-    api.post(`/api/strategy/kill-switch`, { on }).then(r => r.data);
+    api.post<GlobalKillSwitchResponse>(`/api/strategy/kill-switch`, { on }).then(r => r.data);
 
 export const runStrategy = (storeId: string) =>
-    api.post(`/api/stores/${storeId}/strategy/run`, {}).then(r => r.data);
+    api.post<StrategyRunResponse>(`/api/stores/${storeId}/strategy/run`, {}).then(r => r.data);

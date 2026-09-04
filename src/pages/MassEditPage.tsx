@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelection } from '../contexts/SelectionContext';
 import { useToast } from '../contexts/ToastContext';
-import type { OzonProduct } from '../services/ozonApi';
+import type { OzonProduct, ProductsResponse } from '../services/ozonApi';
 import FormulaBar, { type FormulaResult } from '../components/mass-edit/FormulaBar';
 import PreviewTable from '../components/mass-edit/PreviewTable';
 import InlineEditTable, { type InlineChange } from '../components/mass-edit/InlineEditTable';
 import ScheduleDialog from '../components/mass-edit/ScheduleDialog';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { errorMessage, type ApiErrorBody } from '../services/apiError';
 import styles from './MassEditPage.module.css';
 
 const API_BASE = '';
@@ -44,7 +45,7 @@ export default function MassEditPage() {
     try {
       const res = await fetch(`${API_BASE}/api/stores/${storeId}/products?pageSize=10000`);
       if (!res.ok) throw new Error('Не удалось загрузить товары');
-      const data = await res.json();
+      const data: ProductsResponse = await res.json();
       const items: OzonProduct[] = Array.isArray(data) ? data : (data.items ?? []);
 
       if (selectedIds.size > 0) {
@@ -52,8 +53,8 @@ export default function MassEditPage() {
       } else {
         setProducts(items);
       }
-    } catch (e: any) {
-      showError('Ошибка загрузки товаров: ' + e.message);
+    } catch (e) {
+      showError('Ошибка загрузки товаров: ' + errorMessage(e));
     } finally {
       setIsLoading(false);
     }
@@ -68,9 +69,9 @@ export default function MassEditPage() {
     const included = formulaResults.filter((r) => !excludedIds.has(r.offerId));
     return included.map((r) => {
       const p = r.product;
-      const basePrice = parseFloat(p.price || '0');
-      const baseMinPrice = parseFloat(p.min_price || '0');
-      const baseOldPrice = parseFloat(p.old_price || '0');
+      const basePrice = parseFloat(String(p.price || '0'));
+      const baseMinPrice = parseFloat(String(p.min_price || '0'));
+      const baseOldPrice = parseFloat(String(p.old_price || '0'));
 
       return {
         offer_id: r.offerId,
@@ -86,9 +87,9 @@ export default function MassEditPage() {
   const buildInlineUpdates = useCallback(() => {
     return Array.from(inlineChanges.entries()).map(([offerId, ch]) => {
       const product = products.find((p) => p.offer_id === offerId);
-      const basePrice = parseFloat(product?.price || '0');
-      const baseMinPrice = parseFloat(product?.min_price || '0');
-      const baseOldPrice = parseFloat(product?.old_price || '0');
+      const basePrice = parseFloat(String(product?.price || '0'));
+      const baseMinPrice = parseFloat(String(product?.min_price || '0'));
+      const baseOldPrice = parseFloat(String(product?.old_price || '0'));
 
       return {
         offer_id: offerId,
@@ -128,16 +129,16 @@ export default function MassEditPage() {
         body: JSON.stringify({ priceUpdates: updates }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data: ApiErrorBody = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Ошибка обновления цен');
       }
       dismiss(toastId);
       showSuccess(`Успешно обновлено ${updates.length} товаров`);
       clearSelection();
       navigate(`/store/${storeId}`);
-    } catch (e: any) {
+    } catch (e) {
       dismiss(toastId);
-      showError('Ошибка: ' + e.message);
+      showError('Ошибка: ' + errorMessage(e));
     }
   };
 

@@ -24,9 +24,10 @@ export default defineConfig([
       // that CI fails on genuine errors instead of on a backlog everyone has
       // learned to scroll past. See the "code quality" issues in the tracker.
 
-      // ~28 sites, almost all of them marketplace API responses that were never
-      // given response types. Fixing this means typing the API surface.
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // Was ~28 sites of untyped marketplace API responses; all of them now have
+      // response types (see src/services/*.ts). Kept as an error so a renamed
+      // marketplace field fails the build instead of silently becoming undefined.
+      '@typescript-eslint/no-explicit-any': 'error',
 
       // Files that export both a component and its helpers. Costs fast refresh
       // granularity in development; harmless in a build.
