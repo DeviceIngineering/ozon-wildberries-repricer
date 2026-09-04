@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "Репрайсер для Ozon, Wildberries и Яндекс.Маркета: защита маржи по реальным тарифам, автовывод из акций, байесовский подбор цены, API для LLM-агентов. Multi-marketplace repricer with unit-economics price floors and promo auto-exit.",
   "license": "MIT",
-  "author": "DeviceIngineering",
+  "author": "Dmitry Kareysha",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DeviceIngineering/ozon-wildberries-repricer.git"

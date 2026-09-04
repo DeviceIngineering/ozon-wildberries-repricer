@@ -119,7 +119,13 @@ The repricer exposes an external HTTP API (`/api/ext/v1`) designed on the assump
 
 The value is not that the command can be phrased in words — it is that **the agent cannot do damage with it**. Between the request and the marketplace sit rails that know things the model does not:
 
-**A steep price change is stepped.** Wildberries sends a product to quarantine if the price falls by more than 1.5× — the price is simply not applied and the product drops out of search. The repricer knows about that threshold, and when the target sits below it, walks there over several runs, staying just short of the threshold each time. The same limit applies inside price experiments, where the log marks it explicitly as `quarantine cap`.
+**A steep price change is stepped — in both directions.** Marketplaces punish sudden moves, and the repricer knows the thresholds.
+
+Downwards: Wildberries sends a product to quarantine when its price drops by more than 1.5x — the price does not apply at all and the item falls out of search. When the target sits below that threshold, the repricer walks there over several runs, staying just short of the limit each time. This guard did not come from documentation: the experiment engine once tried to drop a price straight to the floor, 40–50% in a single step, and a dry-run pilot caught it before it reached a live store.
+
+Upwards: the increase per run is capped by a per-store setting, 20% by default. "Raise everything by 50%" is carried out over several cycles rather than in one jump.
+
+Between steps the price is read back from the marketplace, so each step starts from what actually applied rather than from what was sent.
 
 **Verification that the price actually landed.** Three minutes after a write, the price is read back from the marketplace. Marketplaces routinely answer "success" to a change they never made; such a write is flagged `VERIFIED_FAIL`, so you see it now rather than finding out a month later.
 
