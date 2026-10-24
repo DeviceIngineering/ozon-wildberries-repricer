@@ -6,6 +6,13 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Price-import history showed zeros.** All three import routes now write the same
+  `result_json` shape (`total_rows`, `valid_updates`, `errors`, `mode`).
+- **Partial Ozon rejections were reported as success.** The import result now shows
+  the rejected items (`item_errors`) the same way the repricer log does; the API
+  returns `rejected_count`, and `valid_updates` counts only accepted items.
+
 ### Added
 - **Context-saving parameters on the external API.** Everything this API returns
   is read by a language model and paid for in tokens; a 1 000-SKU catalogue in

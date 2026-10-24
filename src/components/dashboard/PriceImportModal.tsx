@@ -7,6 +7,7 @@ import Tooltip from '../ui/Tooltip';
 import { useToast } from '../../contexts/ToastContext';
 import styles from './PriceImportModal.module.css';
 import { apiErrorMessage } from '../../services/apiError';
+import type { PriceUpdateItemError } from '../../services/ozonApi';
 
 interface PriceImportModalProps {
   storeId: string;
@@ -68,6 +69,7 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
 
   const [resultMessage, setResultMessage] = useState('');
   const [resultCount, setResultCount] = useState(0);
+  const [rejected, setRejected] = useState<PriceUpdateItemError[]>([]);
 
   const [autoMinPrice, setAutoMinPrice] = useState(true);
   const [autoMinPercent, setAutoMinPercent] = useState(50);
@@ -222,6 +224,7 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
         autoMinPercent: autoMinPrice ? autoMinPercent : 0,
       });
       const count = data.saved_count ?? selected.size;
+      setRejected([]);
       setResultMessage('Эталонные цены сохранены');
       setResultCount(count);
       setStep('result');
@@ -242,10 +245,18 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
         items,
         originalFilename: preview?.originalFilename,
       });
-      setResultMessage(`Цены сохранены и отправлены в ${platformLabel}`);
-      setResultCount(data.sent_count || items.length);
+      const itemErrors: PriceUpdateItemError[] = data.item_errors ?? [];
+      const sent = data.sent_count || items.length;
+      setRejected(itemErrors);
+      setResultCount(sent);
       setStep('result');
-      showSuccess(`Отправлено в ${platformLabel}: ${data.sent_count || items.length} позиций`);
+      if (itemErrors.length > 0) {
+        setResultMessage(`Цены сохранены, но ${platformLabel} отклонил часть позиций`);
+        showError(`${platformLabel} отклонил ${itemErrors.length} из ${sent} позиций`);
+      } else {
+        setResultMessage(`Цены сохранены и отправлены в ${platformLabel}`);
+        showSuccess(`Отправлено в ${platformLabel}: ${sent} позиций`);
+      }
     } catch (err) {
       showError(apiErrorMessage(err, 'Ошибка отправки'));
     } finally {
@@ -570,11 +581,23 @@ export default function PriceImportModal({ storeId, storeName, platform = 'ozon'
       {/* STEP 3 — Result */}
       {step === 'result' && (
         <div className={styles.result}>
-          <span className={styles.resultIcon}>✅</span>
+          <span className={styles.resultIcon}>{rejected.length > 0 ? '⚠️' : '✅'}</span>
           <span className={styles.resultTitle}>{resultMessage}</span>
           <div className={styles.resultStats}>
             <span className={styles.resultStat}>Позиций: {resultCount}</span>
+            {rejected.length > 0 && (
+              <span className={styles.resultStat}>Отклонено: {rejected.length}</span>
+            )}
           </div>
+          {rejected.length > 0 && (
+            <ul>
+              {rejected.map((e) => (
+                <li key={e.offer_id}>
+                  {e.offer_id}: {e.errors.map((x) => x.message || x.code).join(', ')}
+                </li>
+              ))}
+            </ul>
+          )}
           <button className={styles.closeBtn} onClick={onClose}>
             Закрыть
           </button>

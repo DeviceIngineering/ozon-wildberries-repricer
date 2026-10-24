@@ -213,7 +213,9 @@ router.post('/stores/:id/price-import/ref-only', validateId('id'), wrap(async (r
     // Create import record for history
     const importId = await db.createPriceImport(storeId, originalFilename || 'ref-import.xlsx', null);
     await db.updatePriceImport(importId, 'COMPLETED', JSON.stringify({
-        total_items: items.length,
+        total_rows: items.length,
+        valid_updates: items.length,
+        errors: [],
         mode: 'ref-only',
     }));
 
@@ -264,7 +266,7 @@ router.post('/stores/:id/price-import/ref-only-server', validateId('id'), wrap(a
         saved++;
     }
 
-    await db.updatePriceImport(importId, 'COMPLETED', JSON.stringify({ total_items: saved, mode: 'ref-only-server' }));
+    await db.updatePriceImport(importId, 'COMPLETED', JSON.stringify({ total_rows: offerIds.length, valid_updates: saved, errors: [], mode: 'ref-only-server' }));
     // Последний загруженный файл СОХРАНЯЕМ (для аудита/повторной сверки), ротация — храним 2 на магазин
     try {
         const old = await db.getOldPriceImports(storeId, 2);
@@ -334,8 +336,14 @@ router.post('/stores/:id/price-import', validateId('id'), wrap(async (req, res) 
 
     // Create import record for history
     const importId = await db.createPriceImport(storeId, originalFilename || 'import.xlsx', null);
+    // Ozon отвечает 200 и на частичный отказ: отклонённые позиции лежат в _itemErrors
+    const itemErrors = apiResponse?._itemErrors || [];
+    const rejectedCount = new Set(itemErrors.map((e) => e.offer_id)).size;
     await db.updatePriceImport(importId, 'COMPLETED', JSON.stringify({
-        total_items: items.length,
+        total_rows: items.length,
+        valid_updates: Math.max(items.length - rejectedCount, 0),
+        errors: itemErrors,
+        mode: 'price-import',
         ozon_response: apiResponse,
     }));
 
@@ -362,8 +370,9 @@ router.post('/stores/:id/price-import', validateId('id'), wrap(async (req, res) 
     res.json({
         success: true,
         sent_count: items.length,
+        rejected_count: rejectedCount,
         ozon_response: apiResponse,
-        item_errors: apiResponse?._itemErrors || [],
+        item_errors: itemErrors,
     });
 }));
 
